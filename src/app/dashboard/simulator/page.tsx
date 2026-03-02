@@ -24,6 +24,46 @@ export default function SimulatorPage() {
         getUser();
     }, [supabase.auth]);
 
+    const tutorialCategories = [
+        {
+            title: "🔍 재고 조회",
+            description: "수량 확인 및 구역별 검색",
+            questions: [
+                "로즈마리 재고 얼마나 있어?",
+                "곤지암에 있는 로즈마리 재고는?",
+                "서울 구역에 병풀 몇 개 있어?",
+                "로즈마리 10cm 서울 구역 수량 확인해줘."
+            ]
+        },
+        {
+            title: "📥 입고 처리",
+            description: "새 수량 추가",
+            questions: [
+                "로즈마리 10cm 서울 구역에 50개 들어왔어.",
+                "곤지암으로 로즈마리 18cm 100개 입고해줘.",
+                "병풀 10cm 자스민동에 200개 추가해줘."
+            ]
+        },
+        {
+            title: "📤 출고 처리",
+            description: "판매 및 출하 기록",
+            questions: [
+                "로즈마리 24cm 곤지암에서 30개 나갔어.",
+                "서울 구역에서 레몬버베나 18cm 10개 출고해줘.",
+                "나스터튬 10cm 5개 판매됨."
+            ]
+        },
+        {
+            title: "⚙️ 조정/폐기",
+            description: "수량 맞춤 및 폐기",
+            questions: [
+                "로즈마리 10cm 서울 재고 100개로 맞춰줘.",
+                "곤지암 로즈마리 18cm 5개 버렸어. 폐기해줘.",
+                "지금 창고에 레몬유칼리 10cm 0개로 수정해줘."
+            ]
+        }
+    ];
+
     const handleSend = async () => {
         if (!input.trim()) return;
 
@@ -33,7 +73,6 @@ export default function SimulatorPage() {
         setIsLoading(true);
 
         try {
-            // 실제 구현 시 /api/router 에 전송
             const res = await fetch("/api/router", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -46,7 +85,6 @@ export default function SimulatorPage() {
                 throw new Error(data.error || "API 요청 실패");
             }
 
-            // 챗봇 응답 메시지와 디버깅 데이터를 함께 저장
             const assistantMessage = {
                 role: "assistant",
                 content: data.reply || "이해할 수 없는 명령입니다.",
@@ -67,90 +105,173 @@ export default function SimulatorPage() {
         }
     };
 
+    const handleTutorialClick = (question: string) => {
+        setInput(question);
+    };
+
     return (
-        <div className="flex flex-col h-[calc(100vh-10rem)] bg-white max-w-2xl mx-auto shadow-sm border border-gray-200 rounded-2xl overflow-hidden">
-            <header className="bg-emerald-50 border-b border-emerald-100 p-4 text-center font-bold text-emerald-800 flex justify-between items-center">
-                <span>💬 말로다 웹 시뮬레이터</span>
-                <span className="text-xs font-normal text-emerald-600 bg-white px-2 py-1 rounded-full border border-emerald-200">
-                    테스터: {userId}
-                </span>
-            </header>
-
-            <main className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
-                {messages.length === 0 ? (
-                    <div className="text-center text-gray-400 mt-10 text-sm">
-                        음성 명령을 텍스트로 테스트해보세요. <br />예: 사과 10박스 입고해줘
-                    </div>
-                ) : (
-                    messages.map((msg, idx) => (
-                        <div key={idx} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                            {/* 메인 말풍선 */}
-                            <div
-                                className={`max-w-[85%] p-3 rounded-2xl text-sm mb-1 ${msg.role === "user"
-                                    ? "bg-emerald-500 text-white rounded-br-none shadow-sm"
-                                    : "bg-white text-gray-800 border border-gray-100 rounded-bl-none shadow-sm"
-                                    }`}
-                            >
-                                <div className="markdown-container prose prose-sm max-w-none">
-                                    <ReactMarkdown>
-                                        {msg.content}
-                                    </ReactMarkdown>
-                                </div>
+        <div className="max-w-6xl mx-auto px-4 py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* 메인 시뮬레이터 (2컬럼) */}
+                <div className="lg:col-span-2">
+                    <div className="flex flex-col h-[calc(100vh-12rem)] bg-white shadow-xl border border-gray-100 rounded-3xl overflow-hidden transition-all">
+                        <header className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 text-white shadow-md flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">💬</span>
+                                <h2 className="font-bold tracking-tight">말로다 AI 시뮬레이터</h2>
                             </div>
+                            <span className="text-[10px] sm:text-xs font-medium bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30 text-white">
+                                테스터: {userId}
+                            </span>
+                        </header>
 
-                            {/* 디버그 데이터 패널 (어시스턴트 응답일 경우만 표시) */}
-                            {msg.debug && (
-                                <div className="max-w-[90%] bg-gray-800 text-gray-300 text-[10px] p-2 rounded-md overflow-x-auto break-words mt-1">
-                                    <span className="text-yellow-400 font-bold block mb-1">🛠️ [Debug Logs]</span>
-                                    <div>• Intent: {msg.debug.intent}</div>
-
-                                    {msg.debug.entities && Object.keys(msg.debug.entities).length > 0 && (
-                                        <div>• Entities: {JSON.stringify(msg.debug.entities)}</div>
-                                    )}
-
-                                    {msg.debug.actionResult && msg.debug.actionResult.sql_used && (
-                                        <div className="text-blue-300 mt-1">
-                                            [NL2SQL] {msg.debug.actionResult.sql_used}
+                        <main className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30">
+                            {messages.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-10">
+                                    <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-3xl mb-4 animate-bounce">
+                                        👋
+                                    </div>
+                                    <h3 className="text-gray-900 font-bold text-lg mb-2">무엇을 도와드릴까요?</h3>
+                                    <p className="text-gray-500 text-sm max-w-xs">
+                                        음성 명령을 텍스트로 입력하여 테스트해보세요. <br />오른쪽 튜토리얼의 예시를 클릭하면 편리합니다.
+                                    </p>
+                                </div>
+                            ) : (
+                                messages.map((msg, idx) => (
+                                    <div key={idx} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} animate-fade-in-up`}>
+                                        <div
+                                            className={`max-w-[85%] p-4 rounded-2xl text-sm mb-1 transition-all ${msg.role === "user"
+                                                ? "bg-emerald-500 text-white rounded-br-none shadow-lg"
+                                                : "bg-white text-gray-800 border border-gray-100 rounded-bl-none shadow-sm"
+                                                }`}
+                                        >
+                                            <div className="markdown-container prose prose-sm max-w-none">
+                                                <ReactMarkdown>
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
                                         </div>
-                                    )}
 
-                                    {msg.debug.actionResult && msg.debug.actionResult.success === false && (
-                                        <div className="text-red-400 mt-1">
-                                            [Error] {msg.debug.actionResult.message}
-                                        </div>
-                                    )}
+                                        {msg.role === "assistant" && msg.debug && (
+                                            <div className="max-w-[90%] bg-gray-900/95 backdrop-blur-sm text-gray-300 text-[10px] p-3 rounded-xl overflow-x-auto break-words mt-2 border border-gray-700 shadow-xl">
+                                                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-800">
+                                                    <span className="text-xs">🛠️</span>
+                                                    <span className="text-emerald-400 font-bold uppercase tracking-wider">Analysis Result</span>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <div className="flex gap-2"><span className="text-gray-500 font-medium w-12">Intent:</span> <span className="text-white bg-gray-800 px-1.5 py-0.5 rounded">{msg.debug.intent}</span></div>
+
+                                                    {msg.debug.entities && Object.keys(msg.debug.entities).length > 0 && (
+                                                        <div className="flex gap-2">
+                                                            <span className="text-gray-500 font-medium w-12">Entities:</span>
+                                                            <code className="text-teal-300 bg-teal-950/30 px-1.5 py-0.5 rounded">{JSON.stringify(msg.debug.entities)}</code>
+                                                        </div>
+                                                    )}
+
+                                                    {msg.debug.actionResult && msg.debug.actionResult.sql_used && (
+                                                        <div className="mt-2 pt-2 border-t border-gray-800">
+                                                            <span className="text-blue-400 font-medium block mb-1">Generated SQL:</span>
+                                                            <code className="block bg-black/40 p-2 rounded text-blue-200 leading-normal">{msg.debug.actionResult.sql_used}</code>
+                                                        </div>
+                                                    )}
+
+                                                    {msg.debug.actionResult && msg.debug.actionResult.success === false && (
+                                                        <div className="text-rose-400 mt-2 p-2 bg-rose-950/20 rounded border border-rose-900/30">
+                                                            ⚠️ {msg.debug.actionResult.message}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+
+                            {isLoading && (
+                                <div className="flex justify-start animate-pulse">
+                                    <div className="bg-white p-4 rounded-2xl border border-emerald-100 flex items-center gap-3 shadow-sm">
+                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+                                        <span className="text-xs font-medium text-emerald-600">AI가 데이터를 분석하며 최적의 답변을 생성 중입니다...</span>
+                                    </div>
                                 </div>
                             )}
-                        </div>
-                    ))
-                )}
+                        </main>
 
-                {isLoading && (
-                    <div className="flex justify-start">
-                        <div className="bg-white p-3 rounded-lg border border-gray-200 text-xs text-gray-400 animate-pulse">
-                            AI가 의도를 분석하고 있습니다...
+                        <footer className="p-5 bg-white border-t border-gray-100">
+                            <div className="relative group max-w-4xl mx-auto flex items-center gap-3">
+                                <input
+                                    type="text"
+                                    className="flex-1 border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-inner"
+                                    placeholder="무엇을 도와드릴까요? (예: 창고별 로즈마리 재고 얼마야?)"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                                />
+                                <button
+                                    onClick={handleSend}
+                                    disabled={isLoading || !input.trim()}
+                                    className="bg-emerald-600 text-white font-bold p-4 rounded-2xl hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale shadow-lg shadow-emerald-200"
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </footer>
+                    </div>
+                </div>
+
+                {/* 튜토리얼 사이드바 (1컬럼) */}
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl overflow-hidden relative">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60"></div>
+
+                        <h3 className="text-gray-900 font-extrabold text-xl mb-1 flex items-center gap-2 relative z-10">
+                            ✨ 테스트 튜토리얼
+                        </h3>
+                        <p className="text-gray-500 text-xs mb-6 relative z-10">기능별 샘플 질문을 클릭하여 AI의 응답을 확인하세요.</p>
+
+                        <div className="space-y-4 relative z-10">
+                            {tutorialCategories.map((cat, i) => (
+                                <div key={i} className="group">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">{cat.title.split(' ')[0]}</span>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-gray-800">{cat.title.split(' ').slice(1).join(' ')}</h4>
+                                            <p className="text-[10px] text-gray-400">{cat.description}</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        {cat.questions.map((q, j) => (
+                                            <button
+                                                key={j}
+                                                onClick={() => handleTutorialClick(q)}
+                                                className="text-left p-3 rounded-2xl bg-gray-50/50 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 text-[11px] text-gray-600 hover:text-emerald-700 transition-all group/btn flex justify-between items-center"
+                                            >
+                                                <span className="line-clamp-2 pr-2">{q}</span>
+                                                <span className="opacity-0 group-hover/btn:opacity-100 transition-opacity bg-emerald-500 text-white p-1 rounded-lg">
+                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                    </svg>
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-gray-50">
+                            <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 border border-blue-100/50">
+                                <h5 className="text-[11px] font-bold text-blue-700 mb-1 leading-tight">💡 TIP</h5>
+                                <p className="text-[10px] text-blue-600 leading-relaxed opacity-80">
+                                    질문 후 <b>[Debug Logs]</b>를 열어 AI가 추출한 의도(Intent)와 실제 실행한 SQL 쿼리를 확인해 보세요.
+                                </p>
+                            </div>
                         </div>
                     </div>
-                )}
-            </main>
-
-            <footer className="p-4 bg-white border-t border-gray-200 flex gap-2">
-                <input
-                    type="text"
-                    className="flex-1 border border-gray-300 bg-white text-gray-900 placeholder-gray-500 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-shadow"
-                    placeholder="테스트 메시지 입력..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                />
-                <button
-                    onClick={handleSend}
-                    disabled={isLoading || !input.trim()}
-                    className="bg-yellow-400 text-gray-900 font-semibold px-4 py-2 rounded-full hover:bg-yellow-500 transition-colors disabled:opacity-50 shadow-sm"
-                >
-                    전송
-                </button>
-            </footer>
+                </div>
+            </div>
         </div>
     );
 }

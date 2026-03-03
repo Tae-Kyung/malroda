@@ -166,7 +166,7 @@ export async function POST(req: Request) {
         resultJson.action_result = actionResult;
 
         // Add visualization hint for frontend
-        resultJson.visualization_hint = detectVisualizationType(actionResult?.data || null);
+        resultJson.visualization_hint = detectVisualizationType((actionResult && 'data' in actionResult) ? actionResult.data : null);
 
         // 3. 현재 컨텍스트 저장 (다음 대화를 위해)
         if (currentUserId !== 'anonymous-user') {

@@ -202,7 +202,7 @@ export default function MarketPriceChart({ items, date }: MarketPriceChartProps)
                 data={chartData}
                 margin={{ top: 10, right: 10, left: -15, bottom: 30 }}
                 onMouseMove={(state) => {
-                  if (state.activeTooltipIndex !== undefined) {
+                  if (typeof state.activeTooltipIndex === 'number') {
                     setHoveredIndex(state.activeTooltipIndex);
                   }
                 }}
@@ -256,7 +256,7 @@ export default function MarketPriceChart({ items, date }: MarketPriceChartProps)
             <ResponsiveContainer width="100%" height="100%">
               <PieChart
                 onMouseMove={(state) => {
-                  if (state.activeTooltipIndex !== undefined) {
+                  if (typeof state.activeTooltipIndex === 'number') {
                     setHoveredIndex(state.activeTooltipIndex);
                   }
                 }}

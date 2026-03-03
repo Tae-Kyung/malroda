@@ -56,74 +56,68 @@ export default async function InventorySummary({ userId }: { userId: string }) {
     .slice(0, 5);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
-      <div className="p-5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-            className="w-5 h-5 text-emerald-600"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-            />
-          </svg>
-          {t("title")}
-        </h3>
-        <span className="text-xs font-medium bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">
+    <div className="bg-white rounded-2xl border border-gray-100 h-full max-h-[400px] flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+            <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+            </svg>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900">{t("title")}</h3>
+        </div>
+        <span className="text-[11px] text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-md">
           {t("itemCount", { count: totalItems })}
         </span>
       </div>
 
-      <div className="p-5 flex-1">
-        <div className="flex justify-between items-end mb-6">
-          <div>
-            <p className="text-sm text-gray-500 mb-1">{t("totalStock")}</p>
-            <p className="text-3xl font-bold text-gray-900">
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-5 pb-4">
+          {/* Total Stock Summary */}
+          <div className="p-3 rounded-xl bg-emerald-50 mb-3">
+            <p className="text-[11px] text-emerald-600 mb-0.5">{t("totalStock")}</p>
+            <p className="text-2xl font-bold text-emerald-700">
               {totalStock.toLocaleString()}
             </p>
           </div>
-        </div>
 
-        {topItems.length > 0 ? (
-          <div>
-            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-              {t("topItems")}
-            </h4>
-            <div className="space-y-3">
+          {/* Top Items */}
+          {topItems.length > 0 ? (
+            <div className="space-y-2">
               {topItems.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex justify-between items-center text-sm"
+                  className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <span className="text-gray-700 font-medium truncate pr-4">
+                  <span className="text-sm font-medium text-gray-900 truncate">
                     {item.name}
                   </span>
-                  <span className="text-gray-900 font-semibold">
+                  <span className="text-sm font-semibold text-emerald-600 ml-3">
                     {item.stock.toLocaleString()}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-6 text-gray-500 text-sm">
-            {t("noInventory")}
-          </div>
-        )}
+          ) : (
+            <div className="text-sm text-gray-400 text-center py-8">
+              {t("noInventory")}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="bg-gray-50 p-3 mt-auto border-t border-gray-100 text-center">
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/50">
         <Link
           href="/dashboard/settings"
-          className="text-sm text-emerald-600 font-medium hover:text-emerald-700"
+          className="text-[11px] text-gray-400 hover:text-emerald-500 transition-colors flex items-center justify-center gap-1"
         >
-          {t("manageAll")} &rarr;
+          {t("manageAll")}
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
         </Link>
       </div>
     </div>

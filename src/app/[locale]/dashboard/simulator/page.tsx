@@ -31,9 +31,35 @@ export default function SimulatorPage() {
   );
   const [vizData, setVizData] = useState<InventoryItem[] | null>(null);
   const [vizType, setVizType] = useState<"bar" | "pie" | "table" | "none" | null>(null);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [tabSessionId] = useState(() => `sim-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // Sample questions from malroda_question.md
+  const sampleQuestions = [
+    // 재고 조회
+    "로즈마리 재고 얼마나 있어?",
+    "현재 보유 중인 병풀 수량 알려줘.",
+    "로즈마리 10cm 재고는?",
+    "곤지암에 있는 로즈마리 재고는?",
+    "서울 구역에 병풀 몇 개 있어?",
+    // 입고 처리
+    "로즈마리 10cm 서울 구역에 50개 들어왔어.",
+    "곤지암으로 로즈마리 18cm 100개 입고해줘.",
+    "병풀 10cm 자스민동에 200개 추가해줘.",
+    // 출고 처리
+    "로즈마리 24cm 곤지암에서 30개 나갔어.",
+    "서울 구역에서 레몬버베나 18cm 10개 출고해줘.",
+    "나스터튬 10cm 5개 판매됨.",
+    // 재고 조정
+    "로즈마리 10cm 서울 재고 100개로 맞춰줘.",
+    "곤지암 로즈마리 18cm 5개 버렸어. 폐기 처리해줘.",
+    // 시세/입찰
+    "오늘 장미 경매 시세가 어때?",
+    "요즘 농업 관련 입찰 공고 새로 올라온 거 있어?",
+  ];
 
   const supabase = createClient();
 
@@ -49,6 +75,20 @@ export default function SimulatorPage() {
     };
     getUser();
   }, [supabase.auth]);
+
+  // Ctrl+Space shortcut for auto-complete
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.code === "Space") {
+        e.preventDefault();
+        setInput(sampleQuestions[questionIndex]);
+        setQuestionIndex((prev) => (prev + 1) % sampleQuestions.length);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [questionIndex]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -67,8 +107,9 @@ export default function SimulatorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: input,
-          sessionId: `sim-${userId}`,
+          sessionId: tabSessionId,
           userId: userUuid,
+          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
         }),
         signal: controller.signal,
       });
@@ -216,7 +257,7 @@ export default function SimulatorPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="px-4 py-6 sm:px-0">
       {/* Single Card Container */}
       <div className="flex flex-col h-[calc(100vh-10rem)] bg-white shadow-xl border border-gray-100 rounded-3xl overflow-hidden">
         {/* Header */}

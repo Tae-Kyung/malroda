@@ -1,114 +1,64 @@
 import { getTranslations } from "next-intl/server";
 
-export default async function MarketPrices() {
+interface MarketItem {
+  pumName: string;
+  lvNm: string;
+  avgAmt: string;
+  goodName?: string;
+}
+
+interface MarketPricesProps {
+  items: MarketItem[];
+  date: string;
+}
+
+export default async function MarketPrices({ items, date }: MarketPricesProps) {
   const t = await getTranslations("market");
-  const apiKey = process.env.FLOWER_API_KEY;
-  const today = new Date().toISOString().split("T")[0];
-  const url = `https://flower.at.or.kr/api/returnData.api?kind=f001&serviceKey=${apiKey}&baseDate=${today}&flowerGubn=1&dataType=json&countPerPage=5`;
-
-  let items: any[] = [];
-  let errorMsg = null;
-
-  if (!apiKey) {
-    errorMsg = t("noApiKey");
-  } else {
-    try {
-      const response = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
-      const data = await response.json();
-      if (data.response && data.response.items) {
-        items = data.response.items;
-      } else if (data.response && data.response.item) {
-        items = Array.isArray(data.response.item)
-          ? data.response.item
-          : [data.response.item];
-      } else if (Array.isArray(data)) {
-        items = data;
-      } else {
-        errorMsg = t("noData");
-      }
-
-      if (
-        items.length === 0 &&
-        data.response &&
-        data.response.body &&
-        data.response.body.items &&
-        data.response.body.items.item
-      ) {
-        items = data.response.body.items.item;
-      }
-    } catch (err) {
-      console.error("Flower API Fetch Error:", err);
-      errorMsg = t("fetchError");
-    }
-  }
-
-  // Mock data fallback for missing/broken API
-  if (items.length === 0 || errorMsg) {
-    items = [
-      { pumName: "장미 (품종 혼합)", lvNm: "특", avgAmt: "12,500" },
-      { pumName: "국화 (대국)", lvNm: "상", avgAmt: "8,200" },
-      { pumName: "안개꽃", lvNm: "상", avgAmt: "15,000" },
-      { pumName: "튤립", lvNm: "특", avgAmt: "9,800" },
-    ];
-    errorMsg = null;
-  }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col">
-      <div className="p-5 border-b border-gray-100 flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="w-5 h-5 text-rose-500"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M14.25 7.756a4.5 4.5 0 100 8.488M7.5 10.5h5.25m-5.25 3h5.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <h3 className="text-lg font-semibold text-gray-900">{t("title")}</h3>
-        <div className="ml-auto text-right">
-          <span className="block text-xs text-gray-400">{t("source")}</span>
-          <span className="block text-[10px] text-gray-400 mt-0.5 font-mono">
-            {t("asOf", { date: today })}
-          </span>
+    <div className="bg-white rounded-2xl border border-gray-100 h-full max-h-[400px] flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+            <svg className="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900">{t("title")}</h3>
+        </div>
+        <span className="text-[11px] text-gray-400">{date}</span>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-5 pb-4 space-y-2">
+          {items.slice(0, 6).map((item, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {item.pumName}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {item.lvNm} {t("grade")}
+                </p>
+              </div>
+              <div className="text-right ml-3">
+                <p className="text-sm font-semibold text-rose-600">
+                  ₩{Number(item.avgAmt?.replace(/,/g, "") || 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="p-5 flex-1 p-0 overflow-y-auto max-h-64">
-        {errorMsg ? (
-          <div className="text-sm text-red-500 text-center py-4">
-            {errorMsg}
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {items.slice(0, 5).map((item, idx) => (
-              <li
-                key={idx}
-                className="p-4 hover:bg-gray-50 flex justify-between items-center transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {item.pumName}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {item.lvNm} {t("grade")} / {item.goodName || t("general")}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-rose-600">
-                    {Number(item.avgAmt?.replace(/,/g, "") || 0).toLocaleString()}
-                    {t("currency")}
-                  </p>
-                  <p className="text-[10px] text-gray-400">{t("avgPrice")}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/50">
+        <p className="text-[11px] text-gray-400 text-center">{t("source")}</p>
       </div>
     </div>
   );

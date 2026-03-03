@@ -61,8 +61,7 @@ export default async function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen from-gray-50 via-white to-emerald-50/30">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="px-4 py-6 sm:px-0">
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -97,7 +96,6 @@ export default async function SettingsPage() {
             <p className="text-gray-500">{t("settings.noFarm")}</p>
           </div>
         )}
-      </div>
     </div>
   );
 }

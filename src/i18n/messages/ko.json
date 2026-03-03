@@ -83,16 +83,16 @@
     "welcome": "환영합니다!",
     "welcomeSubtitle": "말로다 시스템 베타 테스터 대시보드입니다.",
     "quickStart": {
-      "title": "빠른 시작 (Quick Start)",
+      "title": "빠른 시작",
       "simulator": {
-        "title": "시뮬레이터 접속",
-        "description": "채팅과 음성 기능으로 가상의 챗봇과 소통하며 실제 재고 관리를 체험해보세요.",
-        "button": "테스트 시작하기"
+        "title": "시뮬레이터",
+        "description": "AI 재고 관리를 음성과 채팅으로 테스트하세요.",
+        "button": "테스트 시작"
       },
       "settings": {
-        "title": "농장 설정 관리",
-        "description": "재고 관리를 효율적으로 수행하기 위해 취급하는 구역(Zone)과 품목을 설정하세요.",
-        "button": "농장 설정가기"
+        "title": "농장 설정",
+        "description": "구역과 품목을 설정하세요.",
+        "button": "설정하기"
       }
     }
   },
@@ -124,7 +124,9 @@
     "highest": "최고가",
     "average": "평균가",
     "items": "품목",
-    "types": "종류"
+    "types": "종류",
+    "liveData": "실시간",
+    "ofTotal": "전체 대비"
   },
   "bidding": {
     "title": "최근 입찰 공고",
@@ -134,7 +136,8 @@
     "noBidType": "입찰종류없음",
     "noData": "조회된 입찰 공고가 없습니다.",
     "fetchError": "조달청 정보를 불러오지 못했습니다.",
-    "noApiKey": "API 키가 설정되지 않았습니다."
+    "noApiKey": "API 키가 설정되지 않았습니다.",
+    "viewMore": "더 보기"
   },
   "settings": {
     "title": "농장 기본 설정",
@@ -179,9 +182,9 @@
     "tester": "테스터",
     "empty": {
       "title": "무엇을 도와드릴까요?",
-      "description": "음성 명령을 텍스트로 입력하여 테스트해보세요. 오른쪽 튜토리얼의 예시를 클릭하면 편리합니다."
+      "description": "명령어를 입력하거나 Ctrl+Space로 예시를 불러오세요."
     },
-    "placeholder": "무엇을 도와드릴까요? (예: 창고별 로즈마리 재고 얼마야?)",
+    "placeholder": "무엇을 도와드릴까요? (Ctrl+Space로 예시 자동완성)",
     "loading": "AI가 데이터를 분석하며 최적의 답변을 생성 중입니다...",
     "apiError": "API 오류",
     "startRecording": "음성 녹음 시작",

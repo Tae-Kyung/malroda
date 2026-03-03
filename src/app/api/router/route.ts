@@ -15,7 +15,7 @@ function detectVisualizationType(data: any[] | null): "bar" | "pie" | "table" | 
 
 export async function POST(req: Request) {
     try {
-        const { text, sessionId, userId } = await req.json();
+        const { text, sessionId, userId, history = [] } = await req.json();
 
         if (!text) {
             return NextResponse.json({ error: "Text is required" }, { status: 400 });
@@ -67,10 +67,17 @@ export async function POST(req: Request) {
         console.log(`[Debug] Final Farm ID: ${currentFarmId}`);
 
         // 1. 분류 (Intent & Entity Extraction)
+        // Build messages with conversation history
+        const historyMessages = history.map((msg: { role: string; content: string }) => ({
+            role: msg.role as "user" | "assistant",
+            content: msg.content
+        }));
+
         const response = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: ROUTER_SYSTEM_PROMPT + contextMessage },
+                ...historyMessages,
                 { role: "user", content: text }
             ],
             response_format: { type: "json_object" },

@@ -15,22 +15,19 @@ export default async function BiddingInfo() {
         bidNtceNm: "[일반공고] 2026년 공공 비료 구매 입찰",
         ntcePkindNm: "총액입찰",
         bidNtceEndDt: "2026-03-15 10:00",
-        bidNtceUrl:
-          "https://www.g2b.go.kr/pt/menu/selectSubFrame.do?framesrc=/pt/menu/frameTgong.do?count=1&선택박스=1&s_id=81&gonggoNo=20240212345",
+        bidNtceUrl: "https://www.g2b.go.kr/index.jsp",
       },
       {
         bidNtceNm: "농기계 임대사업소 소형 트랙터 구입",
         ntcePkindNm: "제한경쟁",
         bidNtceEndDt: "2026-03-20 18:00",
-        bidNtceUrl:
-          "https://www.g2b.go.kr/pt/menu/selectSubFrame.do?framesrc=/pt/menu/frameTgong.do?count=1&선택박스=1&s_id=81&gonggoNo=20240323456",
+        bidNtceUrl: "https://www.g2b.go.kr/index.jsp",
       },
       {
         bidNtceNm: "지역 화훼단지 환경개선 사업 용역",
         ntcePkindNm: "협상에의한계약",
         bidNtceEndDt: "2026-03-10 14:00",
-        bidNtceUrl:
-          "https://www.g2b.go.kr/pt/menu/selectSubFrame.do?framesrc=/pt/menu/frameTgong.do?count=1&선택박스=1&s_id=81&gonggoNo=20240298765",
+        bidNtceUrl: "https://www.g2b.go.kr/index.jsp",
       },
     ];
   } else {
@@ -109,66 +106,67 @@ export default async function BiddingInfo() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col">
-      <div className="p-5 border-b border-gray-100 flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="w-5 h-5 text-indigo-500"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-          />
-        </svg>
-        <h3 className="text-lg font-semibold text-gray-900">{t("title")}</h3>
-        <span className="ml-auto text-xs text-gray-400">{t("source")}</span>
+    <div className="bg-white rounded-2xl border border-gray-100 h-full max-h-[400px] flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+            <svg className="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900">{t("title")}</h3>
+        </div>
+        <span className="text-[11px] text-gray-400">{t("source")}</span>
       </div>
 
-      <div className="p-5 flex-1 p-0 overflow-y-auto max-h-64">
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
         {errorMsg && items.length === 0 ? (
-          <div className="text-sm text-red-500 text-center py-4">
-            {errorMsg}
-          </div>
+          <div className="text-sm text-red-500 text-center py-8">{errorMsg}</div>
         ) : (
-          <ul className="divide-y divide-gray-100">
-            {items.slice(0, 4).map((item, idx) => (
-              <li
+          <div className="px-5 pb-4 space-y-2">
+            {items.slice(0, 3).map((item, idx) => (
+              <a
                 key={idx}
-                className="p-4 hover:bg-indigo-50 transition-colors flex flex-col"
+                href={item.bidNtceUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block p-3 rounded-xl bg-gray-50 hover:bg-violet-50 transition-colors group"
               >
-                <a
-                  href={item.bidNtceUrl || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full"
+                <p
+                  className="text-sm font-medium text-gray-900 truncate mb-2 group-hover:text-violet-700"
+                  title={item.bidNtceNm}
                 >
-                  <h4
-                    className="text-sm font-medium text-gray-900 mb-1 truncate"
-                    title={item.bidNtceNm}
-                  >
-                    {item.bidNtceNm}
-                  </h4>
-                  <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                      {item.ntcePkindNm || t("noBidType")}
-                    </span>
-                    <span>
-                      {t("deadline")}:{" "}
-                      <span className="text-indigo-600 font-medium">
-                        {item.bidNtceEndDt?.slice(0, 16) || t("tbd")}
-                      </span>
-                    </span>
-                  </div>
-                </a>
-              </li>
+                  {item.bidNtceNm}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-gray-500 bg-white px-2 py-0.5 rounded-md">
+                    {item.ntcePkindNm || t("noBidType")}
+                  </span>
+                  <span className="text-[11px] text-violet-600 font-medium">
+                    {item.bidNtceEndDt?.slice(5, 10) || t("tbd")}
+                  </span>
+                </div>
+              </a>
             ))}
-          </ul>
+          </div>
         )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/50">
+        <a
+          href="https://www.g2b.go.kr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] text-gray-400 hover:text-violet-500 transition-colors flex items-center justify-center gap-1"
+        >
+          {t("viewMore")}
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
       </div>
     </div>
   );

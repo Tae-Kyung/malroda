@@ -86,13 +86,13 @@
       "title": "Quick Start",
       "simulator": {
         "title": "Access Simulator",
-        "description": "Experience real inventory management by communicating with a virtual chatbot using chat and voice features.",
+        "description": "Test AI inventory management with chat and voice.",
         "button": "Start Test"
       },
       "settings": {
-        "title": "Farm Settings Management",
-        "description": "Set up zones and items you handle for efficient inventory management.",
-        "button": "Go to Farm Settings"
+        "title": "Farm Settings",
+        "description": "Configure your zones and items.",
+        "button": "Go to Settings"
       }
     }
   },
@@ -124,7 +124,9 @@
     "highest": "Highest",
     "average": "Average",
     "items": "Items",
-    "types": "types"
+    "types": "types",
+    "liveData": "Live Data",
+    "ofTotal": "of total"
   },
   "bidding": {
     "title": "Recent Bid Notices",
@@ -134,7 +136,8 @@
     "noBidType": "No bid type",
     "noData": "No bidding notices found.",
     "fetchError": "Failed to load procurement information.",
-    "noApiKey": "API key not configured."
+    "noApiKey": "API key not configured.",
+    "viewMore": "View more"
   },
   "settings": {
     "title": "Farm Basic Settings",
@@ -179,9 +182,9 @@
     "tester": "Tester",
     "empty": {
       "title": "How can I help you?",
-      "description": "Enter voice commands as text to test. It's convenient to click the examples in the tutorial on the right."
+      "description": "Type a command or press Ctrl+Space for examples."
     },
-    "placeholder": "How can I help? (e.g., How much rosemary inventory by warehouse?)",
+    "placeholder": "How can I help? (Ctrl+Space for suggestions)",
     "loading": "AI is analyzing data and generating optimal answers...",
     "apiError": "API Error",
     "startRecording": "Start voice recording",

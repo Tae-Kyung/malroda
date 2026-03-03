@@ -1,0 +1,240 @@
+{
+  "common": {
+    "login": "로그인",
+    "logout": "로그아웃",
+    "signup": "회원가입",
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "add": "추가",
+    "edit": "편집",
+    "confirm": "확인",
+    "back": "뒤로",
+    "loading": "로딩 중...",
+    "error": "오류",
+    "success": "성공",
+    "owner": "소유자 (Owner)",
+    "beta": "Beta"
+  },
+  "metadata": {
+    "title": "말로다 - AI 농장 재고 관리",
+    "description": "음성 기반 지능형 농장 관리 시스템"
+  },
+  "nav": {
+    "brand": "말로다",
+    "startFree": "무료로 시작하기",
+    "dashboard": "대시보드",
+    "simulator": "시뮬레이터",
+    "farmSettings": "농장 설정"
+  },
+  "home": {
+    "hero": {
+      "badge": "웹 베타 테스터 모집 중",
+      "title1": "농장 재고 관리,",
+      "title2": "이제 말로 다 하세요.",
+      "description": "복잡한 엑셀도, 어려운 앱도 필요 없습니다. 현장에서 일하면서 카카오톡이나 음성으로 말하기만 하면 AI가 알아서 재고를 기록하고 분석해줍니다.",
+      "ctaSimulator": "베타 시뮬레이터 체험하기",
+      "ctaFeatures": "기능 둘러보기"
+    },
+    "mockChat": {
+      "userMessage": "오늘 수확한 사과 50박스 1동 창고에 넣었어.",
+      "aiResponse": "✅ 1동 창고에 사과 50박스를 정상 입고 처리했습니다. (현재 총 사과 재고: 150박스)"
+    },
+    "features": {
+      "title": "농가 맞춤형 AI 비서",
+      "subtitle": "디지털 기기가 익숙하지 않아도 누구나 최고의 효율을 낼 수 있습니다.",
+      "voice": {
+        "title": "음성인식 자동기록",
+        "description": "작업 중 장갑을 벗지 마세요. 카카오톡 음성 메시지 하나면 AI가 내용과 수량을 분석해 자동으로 장부에 기록합니다."
+      },
+      "typo": {
+        "title": "찰떡같은 오타 교정",
+        "description": "\"레몬바나나\"라고 잘못 말해도, AI가 문맥과 기존 재고를 파악해 \"레몬버베나\"로 똑똑하게 찾아냅니다."
+      },
+      "market": {
+        "title": "실시간 조달/시세 연동",
+        "description": "내 재고 상황에 맞는 조달청 입찰 정보와 가락시장 실시간 도매 시세를 질문 한 번으로 바로 확인할 수 있습니다."
+      }
+    },
+    "footer": "© 2026 MalRoDa Team. 개발용 베타 버전입니다."
+  },
+  "login": {
+    "title": "말로다",
+    "subtitle": "음성 기반 지능형 농장 관리 시스템",
+    "email": "이메일 (Email)",
+    "password": "비밀번호 (Password)",
+    "emailPlaceholder": "test@example.com",
+    "passwordPlaceholder": "••••••••",
+    "noAccount": "계정이 없으신가요?"
+  },
+  "signup": {
+    "subtitle": "새 계정을 만들어 시작하세요",
+    "fullName": "이름",
+    "fullNamePlaceholder": "홍길동",
+    "passwordPlaceholder": "6자 이상 입력",
+    "passwordHint": "비밀번호는 최소 6자 이상이어야 합니다",
+    "confirmPassword": "비밀번호 확인",
+    "confirmPasswordPlaceholder": "비밀번호를 다시 입력",
+    "createAccount": "회원가입",
+    "alreadyHaveAccount": "이미 계정이 있으신가요?"
+  },
+  "dashboard": {
+    "welcome": "환영합니다!",
+    "welcomeSubtitle": "말로다 시스템 베타 테스터 대시보드입니다.",
+    "quickStart": {
+      "title": "빠른 시작 (Quick Start)",
+      "simulator": {
+        "title": "시뮬레이터 접속",
+        "description": "채팅과 음성 기능으로 가상의 챗봇과 소통하며 실제 재고 관리를 체험해보세요.",
+        "button": "테스트 시작하기"
+      },
+      "settings": {
+        "title": "농장 설정 관리",
+        "description": "재고 관리를 효율적으로 수행하기 위해 취급하는 구역(Zone)과 품목을 설정하세요.",
+        "button": "농장 설정가기"
+      }
+    }
+  },
+  "inventory": {
+    "title": "내 농장 요약",
+    "itemCount": "{count}가지 품목",
+    "totalStock": "총 보유 재고",
+    "topItems": "상위 보유 품목",
+    "noInventory": "현재 등록된 재고가 없습니다.",
+    "manageAll": "전체 재고 설정 관리",
+    "noFarm": "농장 정보가 없습니다."
+  },
+  "market": {
+    "title": "절화류 경매 시세",
+    "source": "양재동 화훼공판장",
+    "asOf": "{date} 기준",
+    "grade": "등급",
+    "general": "일반",
+    "avgPrice": "평균 단가",
+    "currency": "원",
+    "noData": "꽃 시세 정보가 없습니다.",
+    "noApiKey": "API 키가 설정되지 않았습니다.",
+    "fetchError": "시세 정보를 불러오지 못했습니다."
+  },
+  "bidding": {
+    "title": "최근 입찰 공고",
+    "source": "조달청 나라장터",
+    "deadline": "마감",
+    "tbd": "미정",
+    "noBidType": "입찰종류없음",
+    "noData": "조회된 입찰 공고가 없습니다.",
+    "fetchError": "조달청 정보를 불러오지 못했습니다.",
+    "noApiKey": "API 키가 설정되지 않았습니다."
+  },
+  "settings": {
+    "title": "농장 기본 설정",
+    "subtitle": "말로다 AI가 인식할 농장의 이름과 구역을 관리합니다.",
+    "farmName": "농장 이름 (Farm Name)",
+    "noFarm": "소속된 농장 정보가 없습니다.",
+    "items": {
+      "title": "관리 품목 및 구역 (Zone) 설정",
+      "subtitle": "말로다가 인식할 수 있도록 취급하는 품목명, 등급 및 구역을 정확하게 등록해주세요.",
+      "csvUpload": "CSV 대량 등록",
+      "addNew": "+ 새 품목 추가",
+      "csvHelp": "CSV 파일 (필수 헤더: zone, item_name, grade, unit, current_stock)",
+      "upload": "파일 업로드",
+      "uploading": "업로드 중...",
+      "uploadSuccess": "{count}개의 품목이 성공적으로 등록되었습니다.",
+      "zone": "구역 (Zone)",
+      "zonePlaceholder": "예: 1동, 자스민",
+      "itemName": "품목명",
+      "itemNamePlaceholder": "예: 로즈마리",
+      "grade": "등급",
+      "gradePlaceholder": "예: 10cm, 특품",
+      "unit": "단위",
+      "unitDefault": "개",
+      "currentStock": "현재재고",
+      "manage": "관리",
+      "addButton": "추가 반영",
+      "deleteConfirm": "정말 삭제하시겠습니까? (재고 이력이 있는 경우 삭제할 수 없습니다)",
+      "noItems": "등록된 품목이 없습니다. 새 품목을 추가해주세요."
+    }
+  },
+  "simulator": {
+    "title": "말로다 AI 시뮬레이터",
+    "tester": "테스터",
+    "empty": {
+      "title": "무엇을 도와드릴까요?",
+      "description": "음성 명령을 텍스트로 입력하여 테스트해보세요. 오른쪽 튜토리얼의 예시를 클릭하면 편리합니다."
+    },
+    "placeholder": "무엇을 도와드릴까요? (예: 창고별 로즈마리 재고 얼마야?)",
+    "loading": "AI가 데이터를 분석하며 최적의 답변을 생성 중입니다...",
+    "apiError": "API Error",
+    "debug": {
+      "title": "Analysis Result",
+      "intent": "Intent",
+      "entities": "Entities",
+      "generatedSql": "Generated SQL"
+    },
+    "tutorial": {
+      "title": "테스트 튜토리얼",
+      "subtitle": "기능별 샘플 질문을 클릭하여 AI의 응답을 확인하세요.",
+      "tip": {
+        "title": "TIP",
+        "description": "질문 후 [Debug Logs]를 열어 AI가 추출한 의도(Intent)와 실제 실행한 SQL 쿼리를 확인해 보세요."
+      },
+      "categories": {
+        "query": {
+          "title": "재고 조회",
+          "description": "수량 확인 및 구역별 검색",
+          "questions": [
+            "로즈마리 재고 얼마나 있어?",
+            "곤지암에 있는 로즈마리 재고는?",
+            "서울 구역에 병풀 몇 개 있어?",
+            "로즈마리 10cm 서울 구역 수량 확인해줘."
+          ]
+        },
+        "inbound": {
+          "title": "입고 처리",
+          "description": "새 수량 추가",
+          "questions": [
+            "로즈마리 10cm 서울 구역에 50개 들어왔어.",
+            "곤지암으로 로즈마리 18cm 100개 입고해줘.",
+            "병풀 10cm 자스민동에 200개 추가해줘."
+          ]
+        },
+        "outbound": {
+          "title": "출고 처리",
+          "description": "판매 및 출하 기록",
+          "questions": [
+            "로즈마리 24cm 곤지암에서 30개 나갔어.",
+            "서울 구역에서 레몬버베나 18cm 10개 출고해줘.",
+            "나스터튬 10cm 5개 판매됨."
+          ]
+        },
+        "adjust": {
+          "title": "조정/폐기",
+          "description": "수량 맞춤 및 폐기",
+          "questions": [
+            "로즈마리 10cm 서울 재고 100개로 맞춰줘.",
+            "곤지암 로즈마리 18cm 5개 버렸어. 폐기해줘.",
+            "지금 창고에 레몬유칼리 10cm 0개로 수정해줘."
+          ]
+        }
+      }
+    }
+  },
+  "admin": {
+    "title": "말로다 관리자 시스템 (Admin)",
+    "accessDenied": "접근 권한 없음 (Access Denied)",
+    "adminOnly": "관리자 전용 페이지입니다.",
+    "backToDashboard": "대시보드로 돌아가기",
+    "totalTesters": "총 테스터 수",
+    "people": "명",
+    "totalMessages": "총 처리 메시지",
+    "comingSoon": "준비중",
+    "recentLogs": "최근 채팅 분석 로그 (Monitoring)",
+    "refresh": "새로고침",
+    "noLogs": "아직 수집된 AI 분석 로그가 없습니다."
+  },
+  "language": {
+    "switch": "언어",
+    "ko": "한국어",
+    "en": "English"
+  }
+}

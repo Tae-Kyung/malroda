@@ -1,0 +1,240 @@
+{
+  "common": {
+    "login": "Login",
+    "logout": "Logout",
+    "signup": "Sign Up",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "add": "Add",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "owner": "Owner",
+    "beta": "Beta"
+  },
+  "metadata": {
+    "title": "MalRoDa - AI Farm Inventory Management",
+    "description": "Voice-based intelligent farm management system"
+  },
+  "nav": {
+    "brand": "MalRoDa",
+    "startFree": "Start Free",
+    "dashboard": "Dashboard",
+    "simulator": "Simulator",
+    "farmSettings": "Farm Settings"
+  },
+  "home": {
+    "hero": {
+      "badge": "Web Beta Testers Recruiting",
+      "title1": "Farm Inventory Management,",
+      "title2": "Just Say It.",
+      "description": "No complex Excel or difficult apps needed. Just speak via KakaoTalk or voice while working, and AI will automatically record and analyze your inventory.",
+      "ctaSimulator": "Try Beta Simulator",
+      "ctaFeatures": "Browse Features"
+    },
+    "mockChat": {
+      "userMessage": "Put 50 boxes of apples harvested today in warehouse 1.",
+      "aiResponse": "✅ Successfully recorded 50 boxes of apples in warehouse 1. (Current total apple inventory: 150 boxes)"
+    },
+    "features": {
+      "title": "AI Assistant for Farms",
+      "subtitle": "Anyone can achieve maximum efficiency, even without digital device experience.",
+      "voice": {
+        "title": "Voice Recognition Auto-Recording",
+        "description": "Don't take off your gloves during work. Just send one voice message via KakaoTalk, and AI will analyze the content and quantity to automatically record in your ledger."
+      },
+      "typo": {
+        "title": "Smart Typo Correction",
+        "description": "Even if you say \"lemon banana\" incorrectly, AI intelligently identifies context and existing inventory to find \"lemon verbena\"."
+      },
+      "market": {
+        "title": "Real-time Procurement & Price Integration",
+        "description": "Get procurement bid information and real-time wholesale market prices matched to your inventory situation with just one question."
+      }
+    },
+    "footer": "© 2026 MalRoDa Team. Development beta version."
+  },
+  "login": {
+    "title": "MalRoDa",
+    "subtitle": "Voice-based Intelligent Farm Management System",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "test@example.com",
+    "passwordPlaceholder": "••••••••",
+    "noAccount": "Don't have an account?"
+  },
+  "signup": {
+    "subtitle": "Create a new account to get started",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "John Doe",
+    "passwordPlaceholder": "At least 6 characters",
+    "passwordHint": "Password must be at least 6 characters",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?"
+  },
+  "dashboard": {
+    "welcome": "Welcome!",
+    "welcomeSubtitle": "MalRoDa System Beta Tester Dashboard.",
+    "quickStart": {
+      "title": "Quick Start",
+      "simulator": {
+        "title": "Access Simulator",
+        "description": "Experience real inventory management by communicating with a virtual chatbot using chat and voice features.",
+        "button": "Start Test"
+      },
+      "settings": {
+        "title": "Farm Settings Management",
+        "description": "Set up zones and items you handle for efficient inventory management.",
+        "button": "Go to Farm Settings"
+      }
+    }
+  },
+  "inventory": {
+    "title": "My Farm Summary",
+    "itemCount": "{count} types of items",
+    "totalStock": "Total Inventory",
+    "topItems": "Top Items",
+    "noInventory": "No inventory currently registered.",
+    "manageAll": "Manage All Inventory Settings",
+    "noFarm": "No farm information available."
+  },
+  "market": {
+    "title": "Flower Auction Prices",
+    "source": "Yangjae Flower Market",
+    "asOf": "As of {date}",
+    "grade": "Grade",
+    "general": "General",
+    "avgPrice": "Avg. Price",
+    "currency": "KRW",
+    "noData": "No flower price information available.",
+    "noApiKey": "API key not configured.",
+    "fetchError": "Failed to load price information."
+  },
+  "bidding": {
+    "title": "Recent Bid Notices",
+    "source": "Government Procurement Portal",
+    "deadline": "Deadline",
+    "tbd": "TBD",
+    "noBidType": "No bid type",
+    "noData": "No bidding notices found.",
+    "fetchError": "Failed to load procurement information.",
+    "noApiKey": "API key not configured."
+  },
+  "settings": {
+    "title": "Farm Basic Settings",
+    "subtitle": "Manage the farm name and zones that MalRoDa AI recognizes.",
+    "farmName": "Farm Name",
+    "noFarm": "No affiliated farm information.",
+    "items": {
+      "title": "Managed Items & Zone Settings",
+      "subtitle": "Please register item names, grades, and zones accurately so MalRoDa can recognize them.",
+      "csvUpload": "CSV Bulk Upload",
+      "addNew": "+ Add New Item",
+      "csvHelp": "CSV File (Required headers: zone, item_name, grade, unit, current_stock)",
+      "upload": "Upload File",
+      "uploading": "Uploading...",
+      "uploadSuccess": "{count} items successfully registered.",
+      "zone": "Zone",
+      "zonePlaceholder": "e.g., Building 1, Jasmine",
+      "itemName": "Item Name",
+      "itemNamePlaceholder": "e.g., Rosemary",
+      "grade": "Grade",
+      "gradePlaceholder": "e.g., 10cm, Premium",
+      "unit": "Unit",
+      "unitDefault": "pcs",
+      "currentStock": "Current Stock",
+      "manage": "Manage",
+      "addButton": "Add",
+      "deleteConfirm": "Are you sure you want to delete? (Cannot delete if there is inventory history)",
+      "noItems": "No items registered. Please add new items."
+    }
+  },
+  "simulator": {
+    "title": "MalRoDa AI Simulator",
+    "tester": "Tester",
+    "empty": {
+      "title": "How can I help you?",
+      "description": "Enter voice commands as text to test. It's convenient to click the examples in the tutorial on the right."
+    },
+    "placeholder": "How can I help? (e.g., How much rosemary inventory by warehouse?)",
+    "loading": "AI is analyzing data and generating optimal answers...",
+    "apiError": "API Error",
+    "debug": {
+      "title": "Analysis Result",
+      "intent": "Intent",
+      "entities": "Entities",
+      "generatedSql": "Generated SQL"
+    },
+    "tutorial": {
+      "title": "Test Tutorial",
+      "subtitle": "Click sample questions by feature to verify AI responses.",
+      "tip": {
+        "title": "TIP",
+        "description": "After asking a question, open [Debug Logs] to see the intent AI extracted and the actual SQL query executed."
+      },
+      "categories": {
+        "query": {
+          "title": "Inventory Query",
+          "description": "Check quantity & search by zone",
+          "questions": [
+            "How much rosemary inventory do we have?",
+            "What's the rosemary inventory in Gonjiam?",
+            "How many centella in Seoul zone?",
+            "Check rosemary 10cm Seoul zone quantity."
+          ]
+        },
+        "inbound": {
+          "title": "Inbound Processing",
+          "description": "Add new quantity",
+          "questions": [
+            "50 rosemary 10cm came in to Seoul zone.",
+            "Add 100 rosemary 18cm to Gonjiam.",
+            "Add 200 centella 10cm to Jasmine building."
+          ]
+        },
+        "outbound": {
+          "title": "Outbound Processing",
+          "description": "Record sales & shipments",
+          "questions": [
+            "30 rosemary 24cm went out from Gonjiam.",
+            "Ship out 10 lemon verbena 18cm from Seoul zone.",
+            "5 nasturtium 10cm sold."
+          ]
+        },
+        "adjust": {
+          "title": "Adjustment/Disposal",
+          "description": "Quantity adjustment & disposal",
+          "questions": [
+            "Adjust rosemary 10cm Seoul stock to 100.",
+            "Disposed 5 rosemary 18cm in Gonjiam. Mark as disposed.",
+            "Adjust lemon eucalyptus 10cm in warehouse to 0."
+          ]
+        }
+      }
+    }
+  },
+  "admin": {
+    "title": "MalRoDa Admin System",
+    "accessDenied": "Access Denied",
+    "adminOnly": "Admin-only page.",
+    "backToDashboard": "Go Back to Dashboard",
+    "totalTesters": "Total Testers",
+    "people": "people",
+    "totalMessages": "Total Processed Messages",
+    "comingSoon": "Coming Soon",
+    "recentLogs": "Recent Chat Analysis Logs (Monitoring)",
+    "refresh": "Refresh",
+    "noLogs": "No AI analysis logs collected yet."
+  },
+  "language": {
+    "switch": "Language",
+    "ko": "한국어",
+    "en": "English"
+  }
+}

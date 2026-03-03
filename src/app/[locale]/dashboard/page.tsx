@@ -215,7 +215,7 @@ export default async function DashboardPage() {
 
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
-        <InventorySummary userId={user?.id || ""} />
+        <InventorySummary />
         <MarketPrices items={marketItems} date={today} />
         <BiddingInfo />
       </div>

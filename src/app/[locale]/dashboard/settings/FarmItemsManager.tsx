@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { addFarmItem, deleteFarmItem, bulkUploadFarmItems } from "./actions";
 import ItemImageManager from "./ItemImageManager";
 import ItemDetailPanel from "./ItemDetailPanel";
@@ -20,7 +21,7 @@ interface FarmItemsManagerProps {
   farmName: string;
   isOwner: boolean;
   initialItems: Item[];
-  updateFarmNameAction: (formData: FormData) => Promise<void>;
+  onItemsChange?: () => void;
 }
 
 export default function FarmItemsManager({
@@ -28,15 +29,16 @@ export default function FarmItemsManager({
   farmName,
   isOwner,
   initialItems,
-  updateFarmNameAction,
+  onItemsChange,
 }: FarmItemsManagerProps) {
   const t = useTranslations("settings.items");
-  const ts = useTranslations("settings");
   const tc = useTranslations("common");
+  const ti = useTranslations("settings.images");
   const [items, setItems] = useState<Item[]>(initialItems);
   const [isAdding, setIsAdding] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingAction, setIsUploadingAction] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedItemForImages, setSelectedItemForImages] = useState<Item | null>(null);
   const [selectedItemForDetail, setSelectedItemForDetail] = useState<Item | null>(null);
@@ -44,6 +46,24 @@ export default function FarmItemsManager({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // New item image upload states
+  const [newItemImages, setNewItemImages] = useState<File[]>([]);
+  const [newItemImagePreviews, setNewItemImagePreviews] = useState<string[]>([]);
+  const [isDraggingNewItem, setIsDraggingNewItem] = useState(false);
+  const newItemImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Camera capture states
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Sync items when initialItems changes
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
 
   const handleUpload = async (formData: FormData) => {
     setError(null);
@@ -58,19 +78,137 @@ export default function FarmItemsManager({
     }
 
     alert(t("uploadSuccess", { count: result.count || 0 }));
-    window.location.reload();
+    setIsUploading(false);
+    setIsUploadingAction(false);
+    onItemsChange?.();
+  };
+
+  // Handle new item image selection
+  const handleNewItemImageSelect = (files: FileList | File[]) => {
+    const fileArray = Array.from(files).filter(file => file.type.startsWith('image/'));
+    if (fileArray.length === 0) return;
+
+    // Create preview URLs
+    const newPreviews = fileArray.map(file => URL.createObjectURL(file));
+
+    setNewItemImages(prev => [...prev, ...fileArray]);
+    setNewItemImagePreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const handleNewItemImageRemove = (index: number) => {
+    URL.revokeObjectURL(newItemImagePreviews[index]);
+    setNewItemImages(prev => prev.filter((_, i) => i !== index));
+    setNewItemImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearNewItemImages = () => {
+    newItemImagePreviews.forEach(url => URL.revokeObjectURL(url));
+    setNewItemImages([]);
+    setNewItemImagePreviews([]);
+  };
+
+  // Camera functions
+  const startCamera = async () => {
+    setCameraError(null);
+    setShowCameraModal(true);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      setCameraStream(stream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err: any) {
+      console.error("Camera error:", err);
+      setCameraError(err.message || "Cannot access camera");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setShowCameraModal(false);
+    setCameraError(null);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0);
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], `camera-${Date.now()}.jpg`, { type: "image/jpeg" });
+        handleNewItemImageSelect([file]);
+        stopCamera();
+      }
+    }, "image/jpeg", 0.9);
   };
 
   const handleAdd = async (formData: FormData) => {
     setError(null);
-    const result = await addFarmItem(formData);
+    setIsSubmitting(true);
 
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      // 1. Create the item first
+      const result = await addFarmItem(formData);
+
+      if (result.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Immediately add new item to local state (optimistic update)
+      if (result.itemId) {
+        const newItem: Item = {
+          id: result.itemId,
+          item_name: formData.get('item_name') as string,
+          grade: formData.get('grade') as string,
+          zone: formData.get('zone') as string || 'Default',
+          unit: formData.get('unit') as string || 'pcs',
+          current_stock: parseInt(formData.get('current_stock') as string || '0', 10) || 0,
+        };
+        setItems((prev) => [...prev, newItem]);
+      }
+
+      // 3. Upload images if any
+      if (newItemImages.length > 0 && result.itemId) {
+        for (const file of newItemImages) {
+          const imageFormData = new FormData();
+          imageFormData.append("file", file);
+          imageFormData.append("item_id", result.itemId);
+
+          try {
+            await fetch("/api/images", {
+              method: "POST",
+              body: imageFormData,
+            });
+          } catch (err) {
+            console.error("Error uploading image:", err);
+          }
+        }
+      }
+
+      // 4. Clean up form
+      clearNewItemImages();
+      setIsAdding(false);
+      setIsSubmitting(false);
+    } catch (err) {
+      setError("An unexpected error occurred.");
+      setIsSubmitting(false);
     }
-
-    window.location.reload();
   };
 
   const handleDelete = async (itemId: string) => {
@@ -137,52 +275,9 @@ export default function FarmItemsManager({
     <div className="relative">
       {/* Main Content */}
       <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-200 ${selectedItemForDetail ? 'mr-[304px]' : ''}`}>
-      {/* Header with Farm Name */}
+      {/* Header */}
       <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex flex-col gap-5">
-          {/* Farm Name Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-gray-500">{ts("farmName")}</span>
-            </div>
-            <form action={updateFarmNameAction} className="flex-1 flex gap-3">
-              <input type="hidden" name="farm_id" value={farmId} />
-              <input
-                type="text"
-                name="farm_name"
-                defaultValue={farmName}
-                autoComplete="off"
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                placeholder={ts("farmName")}
-              />
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all active:scale-[0.98]"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                {tc("save")}
-              </button>
-            </form>
-            {isOwner && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm flex-shrink-0">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                {tc("owner")}
-              </span>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-gray-100"></div>
-
           {/* Items Manager Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -242,11 +337,11 @@ export default function FarmItemsManager({
 
         {/* CSV Upload Panel */}
         {isUploading && (
-          <div className="mb-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+          <div className="mb-6 p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
             <form action={handleUpload} className="space-y-4">
               <input type="hidden" name="farm_id" value={farmId} />
               <div>
-                <label className="block text-sm font-medium text-blue-900 mb-2">
+                <label className="block text-sm font-medium text-emerald-900 mb-2">
                   {t("csvHelp")}
                 </label>
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -256,13 +351,13 @@ export default function FarmItemsManager({
                       name="file"
                       accept=".csv"
                       required
-                      className="block w-full text-sm text-blue-900
+                      className="block w-full text-sm text-emerald-900
                         file:mr-4 file:py-2.5 file:px-5
                         file:rounded-xl file:border-0
                         file:text-sm file:font-semibold
-                        file:bg-blue-600 file:text-white
-                        hover:file:bg-blue-700
-                        file:shadow-lg file:shadow-blue-500/25
+                        file:bg-gradient-to-r file:from-emerald-500 file:to-teal-600 file:text-white
+                        hover:file:from-emerald-600 hover:file:to-teal-700
+                        file:shadow-lg file:shadow-emerald-500/25
                         file:transition-all file:cursor-pointer
                         cursor-pointer"
                     />
@@ -270,7 +365,7 @@ export default function FarmItemsManager({
                   <button
                     type="submit"
                     disabled={isUploadingAction}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50"
                   >
                     {isUploadingAction ? (
                       <>
@@ -298,9 +393,16 @@ export default function FarmItemsManager({
         {/* Add New Item Panel */}
         {isAdding && (
           <div className="mb-6 p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
-            <form action={handleAdd} className="space-y-4">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                await handleAdd(formData);
+              }}
+              className="space-y-4"
+            >
               <input type="hidden" name="farm_id" value={farmId} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-emerald-800 mb-1.5 uppercase tracking-wider">
                     {t("zone")} *
@@ -348,16 +450,160 @@ export default function FarmItemsManager({
                     className="w-full text-sm rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-emerald-800 mb-1.5 uppercase tracking-wider">
+                    {t("currentStock")}
+                  </label>
+                  <input
+                    type="number"
+                    name="current_stock"
+                    min="0"
+                    defaultValue="0"
+                    placeholder="0"
+                    className="w-full text-sm rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
+
+              {/* Image Upload Area */}
+              <div>
+                <label className="block text-xs font-semibold text-emerald-800 mb-1.5 uppercase tracking-wider">
+                  {t("images")}
+                </label>
+                <div
+                  className={`border-2 border-dashed rounded-xl p-4 transition-colors ${
+                    isDraggingNewItem
+                      ? "border-emerald-500 bg-emerald-100/50"
+                      : "border-emerald-200 bg-white hover:bg-emerald-50/50"
+                  }`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingNewItem(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setIsDraggingNewItem(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDraggingNewItem(false);
+                    handleNewItemImageSelect(e.dataTransfer.files);
+                  }}
+                >
+                  {newItemImagePreviews.length > 0 ? (
+                    <div className="space-y-3">
+                      {/* Image Previews */}
+                      <div className="flex flex-wrap gap-2">
+                        {newItemImagePreviews.map((preview, index) => (
+                          <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-emerald-200 group">
+                            <Image
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              fill
+                              className="object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleNewItemImageRemove(index)}
+                              className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                            >
+                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                        {/* Add More Buttons */}
+                        <button
+                          type="button"
+                          onClick={() => newItemImageInputRef.current?.click()}
+                          className="w-20 h-20 rounded-lg border-2 border-dashed border-emerald-300 flex flex-col items-center justify-center text-emerald-500 hover:bg-emerald-50 transition-colors"
+                          title={ti("uploadHint")}
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={startCamera}
+                          className="w-20 h-20 rounded-lg border-2 border-dashed border-emerald-300 flex flex-col items-center justify-center text-emerald-500 hover:bg-emerald-50 transition-colors"
+                          title={ti("takePhoto")}
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <p className="text-xs text-emerald-600">{newItemImages.length} image(s) selected</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-4">
+                      <div className="flex items-center gap-4 mb-3">
+                        {/* Upload from Files */}
+                        <button
+                          type="button"
+                          onClick={() => newItemImageInputRef.current?.click()}
+                          className="flex flex-col items-center justify-center w-24 h-24 rounded-xl border-2 border-dashed border-emerald-300 text-emerald-500 hover:bg-emerald-50 hover:border-emerald-400 transition-colors"
+                        >
+                          <svg className="w-8 h-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-xs font-medium">{ti("gallery")}</span>
+                        </button>
+                        {/* Take Photo */}
+                        <button
+                          type="button"
+                          onClick={startCamera}
+                          className="flex flex-col items-center justify-center w-24 h-24 rounded-xl border-2 border-dashed border-emerald-300 text-emerald-500 hover:bg-emerald-50 hover:border-emerald-400 transition-colors"
+                        >
+                          <svg className="w-8 h-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="text-xs font-medium">{ti("camera")}</span>
+                        </button>
+                      </div>
+                      <p className="text-xs text-emerald-500">{ti("uploadFormats")}</p>
+                    </div>
+                  )}
+                  {/* File input for gallery */}
+                  <input
+                    ref={newItemImageInputRef}
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => e.target.files && handleNewItemImageSelect(e.target.files)}
+                  />
+                  {/* Hidden canvas for camera capture */}
+                  <canvas ref={canvasRef} className="hidden" />
+                </div>
+              </div>
+
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  {t("addButton")}
+                  {isSubmitting ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {tc("loading")}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      {t("addButton")}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -593,6 +839,78 @@ export default function FarmItemsManager({
           onClose={() => setSelectedItemForImages(null)}
           onImagesChange={() => setImageRefreshKey((k) => k + 1)}
         />
+      )}
+
+      {/* Camera Capture Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">{ti("takePhoto")}</h2>
+                </div>
+                <button
+                  onClick={stopCamera}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Camera View */}
+            <div className="relative bg-black aspect-[4/3]">
+              {cameraError ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
+                  <svg className="w-12 h-12 text-red-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <p className="text-center text-sm">{cameraError}</p>
+                  <p className="text-center text-xs text-gray-400 mt-2">Please allow camera access in your browser settings</p>
+                </div>
+              ) : (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </div>
+
+            {/* Controls */}
+            <div className="px-6 py-4 bg-gray-50 flex items-center justify-center gap-4">
+              <button
+                onClick={stopCamera}
+                className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors"
+              >
+                {tc("cancel")}
+              </button>
+              <button
+                onClick={capturePhoto}
+                disabled={!cameraStream || !!cameraError}
+                className="px-8 py-3 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {ti("capture")}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

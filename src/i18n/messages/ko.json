@@ -26,7 +26,7 @@
     "startFree": "무료로 시작하기",
     "dashboard": "대시보드",
     "simulator": "시뮬레이터",
-    "farmSettings": "농장 설정"
+    "farmSettings": "재고"
   },
   "home": {
     "hero": {
@@ -90,9 +90,9 @@
         "button": "테스트 시작"
       },
       "settings": {
-        "title": "농장 설정",
+        "title": "재고",
         "description": "구역과 품목을 설정하세요.",
-        "button": "설정하기"
+        "button": "재고 관리"
       }
     }
   },
@@ -140,7 +140,7 @@
     "viewMore": "더 보기"
   },
   "settings": {
-    "title": "농장 기본 설정",
+    "title": "재고",
     "subtitle": "말로다 AI가 인식할 농장의 이름과 구역을 관리합니다.",
     "farmName": "농장 이름 (Farm Name)",
     "noFarm": "소속된 농장 정보가 없습니다.",
@@ -174,7 +174,11 @@
       "uploadFormats": "PNG, JPG, GIF 최대 10MB",
       "uploading": "업로드 중...",
       "noImages": "아직 업로드된 이미지가 없습니다",
-      "deleteConfirm": "이 이미지를 삭제하시겠습니까?"
+      "deleteConfirm": "이 이미지를 삭제하시겠습니까?",
+      "gallery": "갤러리",
+      "camera": "카메라",
+      "takePhoto": "사진 촬영",
+      "capture": "촬영"
     }
   },
   "simulator": {
@@ -277,5 +281,25 @@
     "switch": "언어",
     "ko": "한국어",
     "en": "English"
+  },
+  "farm": {
+    "switchFarm": "농장 전환",
+    "createFarm": "새 농장 만들기",
+    "farmName": "농장 이름",
+    "farmNamePlaceholder": "농장 이름을 입력하세요",
+    "creating": "생성 중...",
+    "createSuccess": "농장이 생성되었습니다!",
+    "createError": "농장 생성에 실패했습니다",
+    "myFarms": "내 농장 목록",
+    "noFarms": "등록된 농장이 없습니다",
+    "deleteFarm": "농장 삭제",
+    "deleteConfirm": "정말로 이 농장을 삭제하시겠습니까?",
+    "deleteWarning": "이 농장의 모든 품목, 재고 이력, 데이터가 영구적으로 삭제됩니다. 이 작업은 취소할 수 없습니다.",
+    "deleting": "삭제 중...",
+    "deleteSuccess": "농장이 삭제되었습니다",
+    "deleteError": "농장 삭제에 실패했습니다",
+    "cannotDeleteOnly": "유일한 농장은 삭제할 수 없습니다",
+    "typeFarmName": "확인을 위해 농장 이름을 입력하세요:",
+    "nameDoesNotMatch": "농장 이름이 일치하지 않습니다"
   }
 }

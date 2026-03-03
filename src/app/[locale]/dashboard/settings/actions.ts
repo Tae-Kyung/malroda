@@ -10,12 +10,14 @@ export async function addFarmItem(formData: FormData) {
     const grade = formData.get('grade') as string
     const zone = formData.get('zone') as string
     const unit = formData.get('unit') as string || 'pcs'
+    const currentStockStr = formData.get('current_stock') as string
+    const currentStock = currentStockStr ? parseInt(currentStockStr, 10) : 0
 
     if (!farmId || !itemName || !grade) {
         return { error: 'Required fields (item name, grade) are missing.' }
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
         .from('malroda_items')
         .insert([
             {
@@ -24,9 +26,11 @@ export async function addFarmItem(formData: FormData) {
                 grade: grade,
                 zone: zone || 'Default',
                 unit: unit,
-                current_stock: 0
+                current_stock: isNaN(currentStock) ? 0 : currentStock
             }
         ])
+        .select('id')
+        .single()
 
     if (error) {
         console.error('Error adding item:', error)
@@ -34,7 +38,7 @@ export async function addFarmItem(formData: FormData) {
     }
 
     revalidatePath('/dashboard/settings')
-    return { success: true }
+    return { success: true, itemId: data.id }
 }
 
 export async function deleteFarmItem(itemId: string) {

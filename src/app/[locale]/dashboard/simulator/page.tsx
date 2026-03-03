@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { createClient } from "@/utils/supabase/client";
 import { useTranslations } from "next-intl";
+import { useFarm } from "@/contexts/FarmContext";
 // import InventoryBarChart from "./components/InventoryBarChart";
 // import InventoryPieChart from "./components/InventoryPieChart";
 import InventoryTable from "./components/InventoryTable";
@@ -18,6 +19,7 @@ interface InventoryItem {
 
 export default function SimulatorPage() {
   const t = useTranslations();
+  const { currentFarm } = useFarm();
   const [messages, setMessages] = useState<
     { role: string; content: string; debug?: any }[]
   >([]);
@@ -109,6 +111,7 @@ export default function SimulatorPage() {
           text: input,
           sessionId: tabSessionId,
           userId: userUuid,
+          farmId: currentFarm?.id,
           history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
         }),
         signal: controller.signal,

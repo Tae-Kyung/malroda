@@ -15,7 +15,7 @@ function detectVisualizationType(data: any[] | null): "bar" | "pie" | "table" | 
 
 export async function POST(req: Request) {
     try {
-        const { text, sessionId, userId, history = [] } = await req.json();
+        const { text, sessionId, userId, farmId, history = [] } = await req.json();
 
         if (!text) {
             return NextResponse.json({ error: "Text is required" }, { status: 400 });
@@ -49,13 +49,16 @@ export async function POST(req: Request) {
             }
         }
 
-        let currentFarmId: string | null = null;
-        if (currentUserId !== 'anonymous-user') {
+        // Use farmId from request if provided, otherwise look up from database
+        let currentFarmId: string | null = farmId || null;
+
+        if (!currentFarmId && currentUserId !== 'anonymous-user') {
             const { data: member, error: memberError } = await supabase
                 .from('malroda_farm_members')
                 .select('farm_id')
                 .eq('user_id', currentUserId)
-                .single();
+                .limit(1)
+                .maybeSingle();
 
             console.log(`[Debug] User ID: ${currentUserId}`);
             console.log(`[Debug] Farm Member Query Result:`, member);

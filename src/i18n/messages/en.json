@@ -26,7 +26,7 @@
     "startFree": "Start Free",
     "dashboard": "Dashboard",
     "simulator": "Simulator",
-    "farmSettings": "Farm Settings"
+    "farmSettings": "Inventory"
   },
   "home": {
     "hero": {
@@ -90,9 +90,9 @@
         "button": "Start Test"
       },
       "settings": {
-        "title": "Farm Settings",
+        "title": "Inventory",
         "description": "Configure your zones and items.",
-        "button": "Go to Settings"
+        "button": "Go to Inventory"
       }
     }
   },
@@ -140,7 +140,7 @@
     "viewMore": "View more"
   },
   "settings": {
-    "title": "Farm Basic Settings",
+    "title": "Inventory",
     "subtitle": "Manage the farm name and zones that MalRoDa AI recognizes.",
     "farmName": "Farm Name",
     "noFarm": "No affiliated farm information.",
@@ -174,7 +174,11 @@
       "uploadFormats": "PNG, JPG, GIF up to 10MB",
       "uploading": "Uploading...",
       "noImages": "No images uploaded yet",
-      "deleteConfirm": "Are you sure you want to delete this image?"
+      "deleteConfirm": "Are you sure you want to delete this image?",
+      "gallery": "Gallery",
+      "camera": "Camera",
+      "takePhoto": "Take Photo",
+      "capture": "Capture"
     }
   },
   "simulator": {
@@ -277,5 +281,25 @@
     "switch": "Language",
     "ko": "한국어",
     "en": "English"
+  },
+  "farm": {
+    "switchFarm": "Switch Farm",
+    "createFarm": "Create New Farm",
+    "farmName": "Farm Name",
+    "farmNamePlaceholder": "Enter farm name",
+    "creating": "Creating...",
+    "createSuccess": "Farm created successfully!",
+    "createError": "Failed to create farm",
+    "myFarms": "My Farms",
+    "noFarms": "No farms yet",
+    "deleteFarm": "Delete Farm",
+    "deleteConfirm": "Are you sure you want to delete this farm?",
+    "deleteWarning": "This will permanently delete all items, inventory history, and data associated with this farm. This action cannot be undone.",
+    "deleting": "Deleting...",
+    "deleteSuccess": "Farm deleted successfully",
+    "deleteError": "Failed to delete farm",
+    "cannotDeleteOnly": "Cannot delete your only farm",
+    "typeFarmName": "Type the farm name to confirm:",
+    "nameDoesNotMatch": "Farm name does not match"
   }
 }

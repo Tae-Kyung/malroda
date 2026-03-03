@@ -10,6 +10,7 @@
     "edit": "편집",
     "confirm": "확인",
     "back": "뒤로",
+    "close": "닫기",
     "loading": "로딩 중...",
     "error": "오류",
     "success": "성공",
@@ -114,7 +115,16 @@
     "currency": "원",
     "noData": "꽃 시세 정보가 없습니다.",
     "noApiKey": "API 키가 설정되지 않았습니다.",
-    "fetchError": "시세 정보를 불러오지 못했습니다."
+    "fetchError": "시세 정보를 불러오지 못했습니다.",
+    "chartTitle": "시세 비교 차트",
+    "barChartTitle": "가격 비교",
+    "pieChartTitle": "시장 점유율",
+    "barChart": "막대",
+    "pieChart": "원형",
+    "highest": "최고가",
+    "average": "평균가",
+    "items": "품목",
+    "types": "종류"
   },
   "bidding": {
     "title": "최근 입찰 공고",
@@ -152,7 +162,16 @@
       "manage": "관리",
       "addButton": "추가 반영",
       "deleteConfirm": "정말 삭제하시겠습니까? (재고 이력이 있는 경우 삭제할 수 없습니다)",
-      "noItems": "등록된 품목이 없습니다. 새 품목을 추가해주세요."
+      "noItems": "등록된 품목이 없습니다. 새 품목을 추가해주세요.",
+      "images": "이미지 관리"
+    },
+    "images": {
+      "title": "품목 이미지",
+      "uploadHint": "클릭하거나 이미지를 끌어다 놓으세요",
+      "uploadFormats": "PNG, JPG, GIF 최대 10MB",
+      "uploading": "업로드 중...",
+      "noImages": "아직 업로드된 이미지가 없습니다",
+      "deleteConfirm": "이 이미지를 삭제하시겠습니까?"
     }
   },
   "simulator": {
@@ -164,7 +183,26 @@
     },
     "placeholder": "무엇을 도와드릴까요? (예: 창고별 로즈마리 재고 얼마야?)",
     "loading": "AI가 데이터를 분석하며 최적의 답변을 생성 중입니다...",
-    "apiError": "API Error",
+    "apiError": "API 오류",
+    "startRecording": "음성 녹음 시작",
+    "stopRecording": "녹음 중지",
+    "transcribing": "음성을 텍스트로 변환 중...",
+    "microphoneError": "마이크에 접근할 수 없습니다. 마이크 권한을 허용하고 다시 시도해주세요.",
+    "transcriptionError": "음성 인식 실패",
+    "visualization": {
+      "title": "데이터 시각화",
+      "empty": "재고 데이터를 조회하면 여기에 시각화됩니다",
+      "loading": "처리 중...",
+      "items": "품목",
+      "totalStock": "총 재고",
+      "total": "합계",
+      "zone": "구역",
+      "grade": "등급",
+      "stock": "재고",
+      "itemName": "품목명",
+      "images": "이미지",
+      "noImages": "이미지 없음"
+    },
     "debug": {
       "title": "Analysis Result",
       "intent": "Intent",

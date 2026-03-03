@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { addFarmItem, deleteFarmItem, bulkUploadFarmItems } from "./actions";
+import ItemImageManager from "./ItemImageManager";
+import ItemDetailPanel from "./ItemDetailPanel";
 
 interface Item {
   id: string;
@@ -13,20 +15,35 @@ interface Item {
   current_stock: number;
 }
 
+interface FarmItemsManagerProps {
+  farmId: string;
+  farmName: string;
+  isOwner: boolean;
+  initialItems: Item[];
+  updateFarmNameAction: (formData: FormData) => Promise<void>;
+}
+
 export default function FarmItemsManager({
   farmId,
+  farmName,
+  isOwner,
   initialItems,
-}: {
-  farmId: string;
-  initialItems: Item[];
-}) {
+  updateFarmNameAction,
+}: FarmItemsManagerProps) {
   const t = useTranslations("settings.items");
+  const ts = useTranslations("settings");
   const tc = useTranslations("common");
   const [items, setItems] = useState<Item[]>(initialItems);
   const [isAdding, setIsAdding] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingAction, setIsUploadingAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedItemForImages, setSelectedItemForImages] = useState<Item | null>(null);
+  const [selectedItemForDetail, setSelectedItemForDetail] = useState<Item | null>(null);
+  const [imageRefreshKey, setImageRefreshKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const handleUpload = async (formData: FormData) => {
     setError(null);
@@ -70,221 +87,512 @@ export default function FarmItemsManager({
     setItems((prev) => prev.filter((i) => i.id !== itemId));
   };
 
+  // Filter items based on search
+  const filteredItems = items.filter(item =>
+    item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.zone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.grade.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
-    <div className="pt-8 border-t border-gray-100">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h4 className="text-sm font-medium text-gray-700">{t("title")}</h4>
-          <p className="text-xs text-gray-500">{t("subtitle")}</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              setIsAdding(false);
-              setIsUploading(!isUploading);
-            }}
-            className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-          >
-            {isUploading ? tc("cancel") : t("csvUpload")}
-          </button>
-          <button
-            onClick={() => {
-              setIsUploading(false);
-              setIsAdding(!isAdding);
-            }}
-            className="inline-flex items-center px-3 py-1.5 border border-emerald-600 rounded-md text-xs font-medium text-emerald-600 bg-white hover:bg-emerald-50 transition-colors"
-          >
-            {isAdding ? tc("cancel") : t("addNew")}
-          </button>
+    <div className="relative">
+      {/* Main Content */}
+      <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-200 ${selectedItemForDetail ? 'mr-[304px]' : ''}`}>
+      {/* Header with Farm Name */}
+      <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+        <div className="flex flex-col gap-5">
+          {/* Farm Name Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-500">{ts("farmName")}</span>
+            </div>
+            <form action={updateFarmNameAction} className="flex-1 flex gap-3">
+              <input type="hidden" name="farm_id" value={farmId} />
+              <input
+                type="text"
+                name="farm_name"
+                defaultValue={farmName}
+                autoComplete="off"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                placeholder={ts("farmName")}
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all active:scale-[0.98]"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {tc("save")}
+              </button>
+            </form>
+            {isOwner && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm flex-shrink-0">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                {tc("owner")}
+              </span>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100"></div>
+
+          {/* Items Manager Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">{t("title")}</h2>
+              <p className="text-xs text-gray-500">{t("subtitle")}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setIsAdding(false);
+                  setIsUploading(!isUploading);
+                }}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  isUploading
+                    ? "bg-gray-100 text-gray-700"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                {isUploading ? tc("cancel") : t("csvUpload")}
+              </button>
+              <button
+                onClick={() => {
+                  setIsUploading(false);
+                  setIsAdding(!isAdding);
+                }}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  isAdding
+                    ? "bg-gray-100 text-gray-700"
+                    : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40"
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                {isAdding ? tc("cancel") : t("addNew")}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-600 text-xs rounded-md border border-red-100">
-          {error}
-        </div>
-      )}
-
-      {isUploading && (
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
-          <form
-            action={handleUpload}
-            className="flex flex-col sm:flex-row gap-4 items-end"
-          >
-            <input type="hidden" name="farm_id" value={farmId} />
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-medium text-blue-900 mb-1">
-                {t("csvHelp")}
-              </label>
-              <input
-                type="file"
-                name="file"
-                accept=".csv"
-                required
-                className="block w-full text-sm text-blue-900
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-md file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue-600 file:text-white
-                                hover:file:bg-blue-700 cursor-pointer"
-              />
+      <div className="p-6">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+            <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
             </div>
-            <button
-              type="submit"
-              disabled={isUploadingAction}
-              className="whitespace-nowrap bg-blue-600 text-white text-sm font-medium px-6 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
-            >
-              {isUploadingAction ? t("uploading") : t("upload")}
-            </button>
-          </form>
-        </div>
-      )}
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
 
-      {isAdding && (
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
-          <form
-            action={handleAdd}
-            className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end"
-          >
-            <input type="hidden" name="farm_id" value={farmId} />
+        {/* CSV Upload Panel */}
+        {isUploading && (
+          <div className="mb-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+            <form action={handleUpload} className="space-y-4">
+              <input type="hidden" name="farm_id" value={farmId} />
+              <div>
+                <label className="block text-sm font-medium text-blue-900 mb-2">
+                  {t("csvHelp")}
+                </label>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      name="file"
+                      accept=".csv"
+                      required
+                      className="block w-full text-sm text-blue-900
+                        file:mr-4 file:py-2.5 file:px-5
+                        file:rounded-xl file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-600 file:text-white
+                        hover:file:bg-blue-700
+                        file:shadow-lg file:shadow-blue-500/25
+                        file:transition-all file:cursor-pointer
+                        cursor-pointer"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isUploadingAction}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50"
+                  >
+                    {isUploadingAction ? (
+                      <>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {t("uploading")}
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        {t("upload")}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
 
-            <div className="sm:col-span-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                {t("zone")} *
-              </label>
+        {/* Add New Item Panel */}
+        {isAdding && (
+          <div className="mb-6 p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
+            <form action={handleAdd} className="space-y-4">
+              <input type="hidden" name="farm_id" value={farmId} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-emerald-800 mb-1.5 uppercase tracking-wider">
+                    {t("zone")} *
+                  </label>
+                  <input
+                    type="text"
+                    name="zone"
+                    required
+                    placeholder={t("zonePlaceholder")}
+                    className="w-full text-sm rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-emerald-800 mb-1.5 uppercase tracking-wider">
+                    {t("itemName")} *
+                  </label>
+                  <input
+                    type="text"
+                    name="item_name"
+                    required
+                    placeholder={t("itemNamePlaceholder")}
+                    className="w-full text-sm rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-emerald-800 mb-1.5 uppercase tracking-wider">
+                    {t("grade")} *
+                  </label>
+                  <input
+                    type="text"
+                    name="grade"
+                    required
+                    placeholder={t("gradePlaceholder")}
+                    className="w-full text-sm rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-emerald-800 mb-1.5 uppercase tracking-wider">
+                    {t("unit")}
+                  </label>
+                  <input
+                    type="text"
+                    name="unit"
+                    defaultValue={t("unitDefault")}
+                    className="w-full text-sm rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  {t("addButton")}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Search Bar */}
+        {items.length > 0 && (
+          <div className="mb-6">
+            <div className="relative">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
               <input
                 type="text"
-                name="zone"
-                required
-                placeholder={t("zonePlaceholder")}
-                className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
+                placeholder="Search items, zones, grades..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:bg-white transition-all"
               />
             </div>
-            <div className="sm:col-span-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                {t("itemName")} *
-              </label>
-              <input
-                type="text"
-                name="item_name"
-                required
-                placeholder={t("itemNamePlaceholder")}
-                className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
-            <div className="sm:col-span-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                {t("grade")} *
-              </label>
-              <input
-                type="text"
-                name="grade"
-                required
-                placeholder={t("gradePlaceholder")}
-                className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
-            <div className="sm:col-span-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                {t("unit")}
-              </label>
-              <input
-                type="text"
-                name="unit"
-                defaultValue={t("unitDefault")}
-                className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
-            <div className="sm:col-span-1">
-              <button
-                type="submit"
-                className="w-full bg-emerald-600 text-white text-sm font-medium py-2 rounded-md hover:bg-emerald-700 transition"
-              >
-                {t("addButton")}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+          </div>
+        )}
 
-      {items.length > 0 ? (
-        <div className="overflow-hidden border border-gray-200 rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {t("zone")}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {t("itemName")}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {t("grade")}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {t("unit")}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {t("currentStock")}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {t("manage")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200 flex-col">
-              {items.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-100">
-                    {item.zone}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {item.item_name}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    {item.grade}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    {item.unit}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center font-semibold bg-gray-50/50">
-                    {item.current_stock}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
+        {/* Modern Table */}
+        {filteredItems.length > 0 ? (
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50">
+                    <th className="px-4 py-4 text-center w-16">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">#</span>
+                    </th>
+                    <th className="px-6 py-4 text-left">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("zone")}</span>
+                    </th>
+                    <th className="px-6 py-4 text-left w-1/3">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("itemName")}</span>
+                    </th>
+                    <th className="px-6 py-4 text-left">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("grade")}</span>
+                    </th>
+                    <th className="px-6 py-4 text-center">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("currentStock")}</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginatedItems.map((item, index) => (
+                    <tr
+                      key={item.id}
+                      onClick={() => setSelectedItemForDetail(item)}
+                      className={`group transition-all cursor-pointer ${
+                        selectedItemForDetail?.id === item.id
+                          ? 'bg-emerald-50 border-l-2 border-l-emerald-500'
+                          : index % 2 === 0
+                          ? 'bg-white hover:bg-gray-50'
+                          : 'bg-gray-50/30 hover:bg-gray-100/50'
+                      }`}
                     >
-                      {tc("delete")}
+                      <td className="px-4 py-4 text-center">
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                          {startIndex + index + 1}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="font-medium text-gray-900">{item.zone}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-sm">
+                            <span className="text-white font-bold text-sm">{item.item_name.charAt(0)}</span>
+                          </div>
+                          <span className="font-semibold text-gray-900">{item.item_name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-100">
+                          {item.grade}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="inline-flex items-center justify-center min-w-[80px] px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
+                          <span className="text-white font-bold text-lg">{item.current_stock.toLocaleString()}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Table Footer with Pagination */}
+            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Left: Item count and per page selector */}
+                <div className="flex items-center gap-4">
+                  <p className="text-sm text-gray-500">
+                    Showing <span className="font-semibold text-gray-700">{startIndex + 1}-{Math.min(endIndex, filteredItems.length)}</span> of <span className="font-semibold text-gray-700">{filteredItems.length}</span> items
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">Per page:</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Center: Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+                    {/* Page Numbers */}
+                    {getPageNumbers().map((page, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                        disabled={page === '...'}
+                        className={`min-w-[40px] h-10 rounded-lg text-sm font-medium transition-all ${
+                          page === currentPage
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                            : page === '...'
+                            ? 'text-gray-400 cursor-default'
+                            : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                {/* Right: Total stock */}
+                <p className="text-sm font-semibold text-gray-700">
+                  {t("currentStock")}: <span className="text-emerald-600">{filteredItems.reduce((sum, item) => sum + item.current_stock, 0).toLocaleString()}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : items.length > 0 ? (
+          <div className="text-center py-12 rounded-2xl border border-gray-200 bg-gray-50/50">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-500">No items match your search</p>
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-200">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <p className="text-gray-500 mb-4">{t("noItems")}</p>
+            <button
+              onClick={() => setIsAdding(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              {t("addNew")}
+            </button>
+          </div>
+        )}
+      </div>
+
+      </div>
+
+      {/* Detail Panel - Absolute positioned */}
+      <div
+        className={`absolute top-0 right-0 w-72 transition-all duration-200 ease-out ${
+          selectedItemForDetail ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
+        }`}
+      >
+        <div className="sticky top-6 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          {selectedItemForDetail && (
+            <ItemDetailPanel
+              item={selectedItemForDetail}
+              onClose={() => setSelectedItemForDetail(null)}
+              onManageImages={() => {
+                setSelectedItemForImages(selectedItemForDetail);
+              }}
+              onDelete={() => {
+                handleDelete(selectedItemForDetail.id);
+                setSelectedItemForDetail(null);
+              }}
+              imageRefreshKey={imageRefreshKey}
+            />
+          )}
         </div>
-      ) : (
-        <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200 border-dashed">
-          <p className="text-sm text-gray-500">{t("noItems")}</p>
-        </div>
+      </div>
+
+      {/* Image Manager Modal */}
+      {selectedItemForImages && (
+        <ItemImageManager
+          itemId={selectedItemForImages.id}
+          itemName={`${selectedItemForImages.item_name} (${selectedItemForImages.grade}) - ${selectedItemForImages.zone}`}
+          onClose={() => setSelectedItemForImages(null)}
+          onImagesChange={() => setImageRefreshKey((k) => k + 1)}
+        />
       )}
     </div>
   );

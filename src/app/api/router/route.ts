@@ -7,6 +7,12 @@ import { supabase } from '@/lib/supabase/client';
 
 export const dynamic = "force-dynamic";
 
+// Detect visualization type based on data
+function detectVisualizationType(data: any[] | null): "bar" | "pie" | "table" | "none" {
+    if (!data || data.length === 0) return "none";
+    return "table";  // Always use table format
+}
+
 export async function POST(req: Request) {
     try {
         const { text, sessionId, userId } = await req.json();
@@ -45,13 +51,20 @@ export async function POST(req: Request) {
 
         let currentFarmId: string | null = null;
         if (currentUserId !== 'anonymous-user') {
-            const { data: member } = await supabase
+            const { data: member, error: memberError } = await supabase
                 .from('malroda_farm_members')
                 .select('farm_id')
                 .eq('user_id', currentUserId)
                 .single();
+
+            console.log(`[Debug] User ID: ${currentUserId}`);
+            console.log(`[Debug] Farm Member Query Result:`, member);
+            console.log(`[Debug] Farm Member Query Error:`, memberError);
+
             if (member?.farm_id) currentFarmId = member.farm_id;
         }
+
+        console.log(`[Debug] Final Farm ID: ${currentFarmId}`);
 
         // 1. 분류 (Intent & Entity Extraction)
         const response = await openai.chat.completions.create({
@@ -119,13 +132,31 @@ export async function POST(req: Request) {
             actionResult = await processMarketPrice(text, resultJson.entities);
             resultJson.reply = actionResult.message;
         }
+        else if (resultJson.intent === 'GENERAL_SUPPORT' || resultJson.intent === 'BUYER_MATCHING') {
+            // General conversation handler
+            console.log(`[General Support]: ${resultJson.intent}`);
+            const generalResponse = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: "당신은 '말로다(MALRODA)' 시스템의 친절한 AI 비서입니다. 농부님의 질문에 친절하고 간결하게 답변하세요. 재고 관리, 입출고, 시세 조회 등의 기능을 안내해 줄 수 있습니다. 한국어로 대답하세요."
+                    },
+                    { role: "user", content: text }
+                ],
+                temperature: 0.7,
+            });
+            resultJson.reply = generalResponse.choices[0].message.content || "안녕하세요! 무엇을 도와드릴까요?";
+        }
         else {
-            // 그 외 조달청 조회, 매칭, 잡담 등의 로직은 Phase 4에서 구현
             console.log(`[Unhandled Intent]: ${resultJson.intent}`);
-            resultJson.reply = "[미구현] 아직 준비 중인 카테고리입니다.";
+            resultJson.reply = "죄송합니다, 해당 기능은 아직 준비 중입니다. 재고 조회, 입출고, 시세 조회 기능을 이용해 보세요.";
         }
 
         resultJson.action_result = actionResult;
+
+        // Add visualization hint for frontend
+        resultJson.visualization_hint = detectVisualizationType(actionResult?.data || null);
 
         // 3. 현재 컨텍스트 저장 (다음 대화를 위해)
         if (currentUserId !== 'anonymous-user') {

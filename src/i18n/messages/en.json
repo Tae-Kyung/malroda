@@ -10,6 +10,7 @@
     "edit": "Edit",
     "confirm": "Confirm",
     "back": "Back",
+    "close": "Close",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
@@ -114,7 +115,16 @@
     "currency": "KRW",
     "noData": "No flower price information available.",
     "noApiKey": "API key not configured.",
-    "fetchError": "Failed to load price information."
+    "fetchError": "Failed to load price information.",
+    "chartTitle": "Price Comparison Chart",
+    "barChartTitle": "Price Comparison",
+    "pieChartTitle": "Market Share",
+    "barChart": "Bar",
+    "pieChart": "Pie",
+    "highest": "Highest",
+    "average": "Average",
+    "items": "Items",
+    "types": "types"
   },
   "bidding": {
     "title": "Recent Bid Notices",
@@ -152,7 +162,16 @@
       "manage": "Manage",
       "addButton": "Add",
       "deleteConfirm": "Are you sure you want to delete? (Cannot delete if there is inventory history)",
-      "noItems": "No items registered. Please add new items."
+      "noItems": "No items registered. Please add new items.",
+      "images": "Manage Images"
+    },
+    "images": {
+      "title": "Item Images",
+      "uploadHint": "Click or drag images here to upload",
+      "uploadFormats": "PNG, JPG, GIF up to 10MB",
+      "uploading": "Uploading...",
+      "noImages": "No images uploaded yet",
+      "deleteConfirm": "Are you sure you want to delete this image?"
     }
   },
   "simulator": {
@@ -165,6 +184,25 @@
     "placeholder": "How can I help? (e.g., How much rosemary inventory by warehouse?)",
     "loading": "AI is analyzing data and generating optimal answers...",
     "apiError": "API Error",
+    "startRecording": "Start voice recording",
+    "stopRecording": "Stop recording",
+    "transcribing": "Converting speech to text...",
+    "microphoneError": "Could not access microphone. Please allow microphone access and try again.",
+    "transcriptionError": "Speech recognition failed",
+    "visualization": {
+      "title": "Data Visualization",
+      "empty": "Query inventory data to see visualization here",
+      "loading": "Processing...",
+      "items": "Items",
+      "totalStock": "Total Stock",
+      "total": "Total",
+      "zone": "Zone",
+      "grade": "Grade",
+      "stock": "Stock",
+      "itemName": "Item",
+      "images": "Images",
+      "noImages": "No images"
+    },
     "debug": {
       "title": "Analysis Result",
       "intent": "Intent",

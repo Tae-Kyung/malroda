@@ -1,13 +1,13 @@
 -- ============================================
 -- COMPLETE SEED SCRIPT FOR MALRODA
--- Creates admin user + seeds herb5 inventory
+-- Creates admin user + profile + farm + seeds herb5 inventory
 -- Run this AFTER running setup.sql
 -- ============================================
 
--- 1. Create Admin User (admin@herb5.com / admin1234!)
+-- 1. Create Admin User in auth.users (if not exists)
+-- Note: If you created user via Supabase UI, this will be skipped
 DO $$
 BEGIN
-  -- Only insert if admin user doesn't exist
   IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@herb5.com') THEN
     INSERT INTO auth.users (
       id,
@@ -38,18 +38,49 @@ BEGIN
       '',
       ''
     );
-    RAISE NOTICE 'Admin user created: admin@herb5.com';
+    RAISE NOTICE 'Admin user created in auth.users';
   ELSE
-    RAISE NOTICE 'Admin user already exists: admin@herb5.com';
+    RAISE NOTICE 'Admin user already exists in auth.users';
   END IF;
 END $$;
 
--- The trigger handle_new_user() will automatically create:
--- - malroda_profiles entry (with is_admin = true)
--- - malroda_farms entry (named "Herb5 Farm")
--- - malroda_farm_members entry (role = owner)
+-- 2. Create Profile, Farm, and Membership (handles both trigger and UI-created users)
+DO $$
+DECLARE
+  admin_id UUID;
+  new_farm_id UUID;
+BEGIN
+  -- Get admin user ID from auth.users
+  SELECT id INTO admin_id FROM auth.users WHERE email = 'admin@herb5.com';
 
--- 2. Seed Herb5 Inventory Function
+  IF admin_id IS NULL THEN
+    RAISE EXCEPTION 'Admin user not found in auth.users. Please create user first.';
+  END IF;
+
+  -- Create profile if not exists (trigger may not have fired for UI-created users)
+  IF NOT EXISTS (SELECT 1 FROM public.malroda_profiles WHERE id = admin_id) THEN
+    INSERT INTO public.malroda_profiles (id, email, full_name, is_admin)
+    VALUES (admin_id, 'admin@herb5.com', 'Herb5 Admin', true);
+    RAISE NOTICE 'Admin profile created in malroda_profiles';
+  ELSE
+    RAISE NOTICE 'Admin profile already exists';
+  END IF;
+
+  -- Create farm if not exists
+  IF NOT EXISTS (SELECT 1 FROM public.malroda_farms WHERE owner_id = admin_id) THEN
+    new_farm_id := gen_random_uuid();
+    INSERT INTO public.malroda_farms (id, owner_id, farm_name)
+    VALUES (new_farm_id, admin_id, 'Herb5 Farm');
+
+    INSERT INTO public.malroda_farm_members (farm_id, user_id, role)
+    VALUES (new_farm_id, admin_id, 'owner');
+    RAISE NOTICE 'Admin farm and membership created';
+  ELSE
+    RAISE NOTICE 'Admin farm already exists';
+  END IF;
+END $$;
+
+-- 3. Seed Herb5 Inventory Function
 CREATE OR REPLACE FUNCTION public.seed_herb5_inventory()
 RETURNS TEXT
 LANGUAGE plpgsql
@@ -66,7 +97,7 @@ BEGIN
   WHERE email = 'admin@herb5.com';
 
   IF admin_user_id IS NULL THEN
-    RETURN 'Error: Admin user (admin@herb5.com) not found. The trigger may not have fired.';
+    RETURN 'Error: Admin profile not found. Run the profile creation block first.';
   END IF;
 
   -- Find admin farm
@@ -76,7 +107,7 @@ BEGIN
   LIMIT 1;
 
   IF admin_farm_id IS NULL THEN
-    RETURN 'Error: Admin farm not found.';
+    RETURN 'Error: Admin farm not found. Run the farm creation block first.';
   END IF;
 
   -- Clear existing items for re-seeding

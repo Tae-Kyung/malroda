@@ -4,6 +4,10 @@
 -- https://supabase.com/dashboard/project/_/sql
 -- ============================================
 
+-- 0. Enable Required Extensions (for fuzzy search)
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- 1. Core Tables
 CREATE TABLE IF NOT EXISTS public.malroda_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -180,6 +184,110 @@ CREATE POLICY "Users can view logs in their farms" ON public.malroda_inventory_l
   );
 CREATE POLICY "Users can insert logs" ON public.malroda_inventory_logs
   FOR INSERT WITH CHECK (user_id = auth.uid());
+
+-- Policies for session contexts
+ALTER TABLE public.malroda_session_contexts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage own sessions" ON public.malroda_session_contexts;
+CREATE POLICY "Users can manage own sessions" ON public.malroda_session_contexts
+  FOR ALL USING (user_id = auth.uid());
+
+-- ============================================
+-- 5. AI SIMULATOR RPCs
+-- ============================================
+
+-- 5.1 Read-Only SQL Execution (for NL2SQL inventory queries)
+CREATE OR REPLACE FUNCTION public.execute_read_only_sql(query text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  -- Security: Only SELECT queries targeting the inventory view
+  IF TRIM(query) NOT ILIKE 'SELECT %' THEN
+    RAISE EXCEPTION 'Only SELECT queries are allowed.';
+  END IF;
+
+  IF query !~* 'v_malroda_inventory_summary' THEN
+    RAISE EXCEPTION 'Queries must target the v_malroda_inventory_summary view.';
+  END IF;
+
+  IF query ~* '\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|GRANT|REVOKE|COMMIT|ROLLBACK|EXECUTE)\b' THEN
+    RAISE EXCEPTION 'Dangerous SQL keywords are not allowed.';
+  END IF;
+
+  -- Execute and return as JSONB array
+  EXECUTE 'SELECT jsonb_agg(row_to_json(t)) FROM (' || query || ') t' INTO result;
+
+  IF result IS NULL THEN
+    result := '[]'::jsonb;
+  END IF;
+
+  RETURN result;
+END;
+$$;
+
+-- 5.2 Inventory Update RPC (for inventory changes with logging)
+CREATE OR REPLACE FUNCTION public.malroda_update_inventory(
+  p_item_id UUID,
+  p_user_id UUID,
+  p_action_type VARCHAR,
+  p_qty_change INTEGER,
+  p_original_text TEXT
+)
+RETURNS TABLE (
+  new_stock INTEGER,
+  item_name VARCHAR,
+  grade VARCHAR,
+  zone VARCHAR
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_current_stock INTEGER;
+  v_item_name VARCHAR;
+  v_grade VARCHAR;
+  v_zone VARCHAR;
+BEGIN
+  -- Get current item info with lock
+  SELECT i.current_stock, i.item_name, i.grade, i.zone
+  INTO v_current_stock, v_item_name, v_grade, v_zone
+  FROM public.malroda_items i
+  WHERE i.id = p_item_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Item not found: %', p_item_id;
+  END IF;
+
+  -- Calculate new stock
+  IF p_action_type = 'ADJUST' THEN
+    v_current_stock := p_qty_change; -- Direct set for ADJUST
+  ELSE
+    v_current_stock := v_current_stock + p_qty_change;
+  END IF;
+
+  -- Prevent negative stock
+  IF v_current_stock < 0 THEN
+    v_current_stock := 0;
+  END IF;
+
+  -- Update the item
+  UPDATE public.malroda_items
+  SET current_stock = v_current_stock, updated_at = NOW()
+  WHERE id = p_item_id;
+
+  -- Log the change
+  INSERT INTO public.malroda_inventory_logs
+    (item_id, user_id, action_type, quantity_change, original_text)
+  VALUES
+    (p_item_id, p_user_id, p_action_type, p_qty_change, p_original_text);
+
+  RETURN QUERY SELECT v_current_stock, v_item_name, v_grade, v_zone;
+END;
+$$;
 
 -- Done!
 SELECT 'Database setup complete!' as status;

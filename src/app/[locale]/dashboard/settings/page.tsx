@@ -23,7 +23,7 @@ export default async function SettingsPage() {
     .single();
 
   let farmData = null;
-  let farmItems = [];
+  let farmItems: any[] = [];
 
   if (members?.farm_id) {
     const { data: farm } = await supabase
@@ -61,64 +61,42 @@ export default async function SettingsPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 sm:px-0">
-      <div className="bg-white shadow rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              {t("settings.title")}
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              {t("settings.subtitle")}
-            </p>
-          </div>
-          {members?.role === "owner" && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-              {t("common.owner")}
-            </span>
-          )}
-        </div>
-
-        <div className="px-6 py-6 sm:p-10">
-          {farmData ? (
-            <>
-              <form action={updateFarmName} className="space-y-6 max-w-md mb-8">
-                <input type="hidden" name="farm_id" value={farmData.id} />
-
-                <div>
-                  <label
-                    htmlFor="farm_name"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("settings.farmName")}
-                  </label>
-                  <div className="mt-2 flex rounded-md shadow-sm">
-                    <input
-                      type="text"
-                      name="farm_name"
-                      id="farm_name"
-                      defaultValue={farmData.farm_name}
-                      autoComplete="off"
-                      className="flex-1 min-w-0 block w-full px-3 py-2 rounded-l-md border border-gray-300 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-gray-900"
-                    />
-                    <button
-                      type="submit"
-                      className="inline-flex items-center px-4 py-2 border border-transparent border-l-0 rounded-r-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                    >
-                      {t("common.save")}
-                    </button>
-                  </div>
-                </div>
-              </form>
-
-              <FarmItemsManager farmId={farmData.id} initialItems={farmItems} />
-            </>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-gray-500 text-sm">{t("settings.noFarm")}</p>
+    <div className="min-h-screen from-gray-50 via-white to-emerald-50/30">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
             </div>
-          )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{t("settings.title")}</h1>
+              <p className="text-sm text-gray-500">{t("settings.subtitle")}</p>
+            </div>
+          </div>
         </div>
+
+        {farmData ? (
+          <FarmItemsManager
+            farmId={farmData.id}
+            farmName={farmData.farm_name}
+            isOwner={members?.role === "owner"}
+            initialItems={farmItems}
+            updateFarmNameAction={updateFarmName}
+          />
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </div>
+            <p className="text-gray-500">{t("settings.noFarm")}</p>
+          </div>
+        )}
       </div>
     </div>
   );

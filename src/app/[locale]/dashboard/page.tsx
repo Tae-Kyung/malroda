@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import InventorySummary from "./components/InventorySummary";
 import MarketPrices from "./components/MarketPrices";
 import BiddingInfo from "./components/BiddingInfo";
+import MarketPriceChartWrapper from "./components/MarketPriceChartWrapper";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -39,6 +40,11 @@ export default async function DashboardPage() {
         <div className="md:col-span-1">
           <BiddingInfo />
         </div>
+      </div>
+
+      {/* Market Price Visualization */}
+      <div className="mb-8">
+        <MarketPriceChartWrapper />
       </div>
 
       {/* Quick Start Section */}
